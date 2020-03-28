@@ -1,5 +1,5 @@
 # Euchre
-Euchre Game to Challenge AI. 
+Euchre Game to Challenge each other with AI bots. 
 
 Game can be executed from:
 Euchre/src/main/java/com/n8id/n8euchretable/GameEngine.java 
