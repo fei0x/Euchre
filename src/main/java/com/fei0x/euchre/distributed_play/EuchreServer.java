@@ -3,13 +3,15 @@
  * and open the template in the editor.
  */
 
-package com.n8id.n8euchredistributedplay;
+package com.fei0x.euchre.distributed_play;
 
-import com.n8id.n8euchreexceptions.MissingPlayer;
-import com.n8id.n8euchregame.Trick;
+import com.fei0x.euchre.exceptions.MissingPlayer;
+import com.fei0x.euchre.game.Card;
+import com.fei0x.euchre.game.Trick;
+
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -23,14 +25,20 @@ public interface EuchreServer extends Remote {
 
     /**************************
      * Ask Server Remote Functions
+     * String player names and sessionIds are used like usernames and passwords to authenticate
      *************************/
-    public void speak(String playerName,long sessionID, String somethingToSay) throws RemoteException;
-    public ArrayList<Trick> getPastTricks(String playerName,long sessionID)  throws RemoteException, IllegalStateException;
-    public int getMyTeamsScore(String playerName,long sessionID)  throws RemoteException, MissingPlayer;
-    public int getOpponentsScore(String playerName,long sessionID) throws RemoteException;
-    public String getPartnersName(String playerName,long sessionID) throws RemoteException;
-    public ArrayList<String> getOpponents(String playerName,long sessionID) throws RemoteException;
+
+	public List<Card> myHand(String playerName,long sessionID) throws RemoteException;    
+	public String partnersName(String playerName,long sessionID) throws RemoteException;    
+    public String myTeamName(String playerName,long sessionID) throws RemoteException;    
+    public String opponentsTeamName(String playerName,long sessionID) throws RemoteException;    
+    public List<String> opponentsNames(String playerName,long sessionID) throws RemoteException;    
+    public void speak(String playerName,long sessionID, String somethingToSay) throws RemoteException;    
+    public List<Trick> pastTricks(String playerName,long sessionID)  throws RemoteException, IllegalStateException;
+    public int myTeamsScore(String playerName,long sessionID)  throws RemoteException, MissingPlayer;
+    public int opponentsScore(String playerName,long sessionID) throws RemoteException;
     public String whoIsDealer(String playerName,long sessionID) throws RemoteException;
-    public String getLeadPlayer(String playerName,long sessionID) throws RemoteException;
+    public String whoIsLeadPlayer(String playerName,long sessionID) throws RemoteException;
+    
 
 }

@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package com.n8id.n8euchredistributedplay;
+package com.fei0x.euchre.distributed_play;
 
 import java.io.PrintStream;
 

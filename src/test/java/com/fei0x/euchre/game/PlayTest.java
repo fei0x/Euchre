@@ -3,7 +3,12 @@
  * and open the template in the editor.
  */
 
-package com.n8id.n8euchregame;
+package com.fei0x.euchre.game;
+
+import com.fei0x.euchre.game.Card;
+import com.fei0x.euchre.game.Play;
+import com.fei0x.euchre.game.Rank;
+import com.fei0x.euchre.game.Suit;
 
 import junit.framework.Test;
 import junit.framework.TestCase;

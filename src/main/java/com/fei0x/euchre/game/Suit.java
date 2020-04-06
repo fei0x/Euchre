@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package com.n8id.n8euchregame;
+package com.fei0x.euchre.game;
 
 import java.io.Serializable;
 

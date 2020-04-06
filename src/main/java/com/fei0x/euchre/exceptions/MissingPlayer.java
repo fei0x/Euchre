@@ -3,15 +3,21 @@
  * and open the template in the editor.
  */
 
-package com.n8id.n8euchreexceptions;
+package com.fei0x.euchre.exceptions;
 
 /**
  * An exception thrown when a player by name cannot be found, for whatever reason.
  * @author jsweetman
  */
 public class MissingPlayer extends RuntimeException{
-
-    String playername;
+    
+	/**
+	 * ID for Serialization
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	
+    String playerName;
 
     /**
      * Plain Constructor
@@ -19,7 +25,7 @@ public class MissingPlayer extends RuntimeException{
      */
     public MissingPlayer(String playername){
         super();
-        this.playername = playername;
+        this.playerName = playername;
     }
 
     /**
@@ -29,7 +35,7 @@ public class MissingPlayer extends RuntimeException{
      */
     public MissingPlayer(String playername, String message){
         super(message);
-        this.playername = playername;
+        this.playerName = playername;
     }
 
     /**
@@ -40,7 +46,7 @@ public class MissingPlayer extends RuntimeException{
      */
     public MissingPlayer(String playername, String message, Throwable cause){
         super(message, cause);
-        this.playername = playername;
+        this.playerName = playername;
     }
 
     /**
@@ -50,7 +56,7 @@ public class MissingPlayer extends RuntimeException{
      */
     public MissingPlayer(String playername,Throwable cause){
         super(cause);
-        this.playername = playername;
+        this.playerName = playername;
     }
 
     /**
@@ -58,7 +64,7 @@ public class MissingPlayer extends RuntimeException{
      * @return the name of the player
      */
     public String getPlayerName(){
-        return playername;
+        return playerName;
     }
 
 }

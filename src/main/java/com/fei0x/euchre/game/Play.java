@@ -3,16 +3,24 @@
  * and open the template in the editor.
  */
 
-package com.n8id.n8euchregame;
+package com.fei0x.euchre.game;
 
 import java.io.Serializable;
 
 /**
  * This class represents a card played and the player who played it.
+ * Plays don't hold direct references to players, so that player ai who look at plays don't get handles to the players themselves 
  * @author jsweetman
  */
 public class Play implements Cloneable, Serializable{
-    /**
+    
+	/**
+	 * ID for Serialization
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	
+	/**
      * the name of the player who played the card
      */
     private String player;
@@ -49,12 +57,13 @@ public class Play implements Cloneable, Serializable{
     }
 
     /**
-     * Makes a copy of the play, so that players who get their hands on plays, will actually get their hands on copys. that way they can't cheat!!
+     * Makes a copy of the play, so that players who get their hands on plays, will actually get their hands on copies. that way they can't cheat!!
+     * Need a 'deep' copy to ensure the card is cloned
      * @return a COPY of this play.
      */
     @Override
     protected Play clone(){
-        return new Play(new String(player),card.clone());
+        return new Play(player,card.clone()); //String is immutable, don't need to clone it.
     }
 
 

@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package com.n8id.n8euchreexceptions;
+package com.fei0x.euchre.exceptions;
 
 /**
  * An IllegalPlay exception, for the the card laid shouldn't have been played. A Good reason to make the player lose the game.
@@ -11,7 +11,13 @@ package com.n8id.n8euchreexceptions;
  */
 public class IllegalPlay extends Exception {
 
-    String playername;
+    /**
+	 * ID for Serialization
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	
+	String playername;
 
     /**
      * Plain Constructor

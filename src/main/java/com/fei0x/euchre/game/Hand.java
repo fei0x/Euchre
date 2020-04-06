@@ -2,103 +2,92 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.n8id.n8euchregame;
+package com.fei0x.euchre.game;
 
-import com.n8id.n8euchreexceptions.IllegalPlay;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.ListIterator;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.fei0x.euchre.exceptions.IllegalPlay;
 
 
 /**
  * This class represents the hand of each player.
  * At first should contain 5 cards, and dwindle to 0 as the round proceeds
- * The card's here represent the Player's REAL hand. the hands in the Player class should only be a copy of this hand.
- * 'Abstinence is the best means of prevention.'
+ * The cards here represent the Player's REAL hand. the hands in the Player class should only be a copy of this hand.
  * @author jsweetman
  */
-public class PlayerHand implements Cloneable, Serializable {
-
+public class Hand implements Cloneable, Serializable {
+    
+	/**
+	 * ID for Serialization
+	 */
+	private static final long serialVersionUID = 1L;
+	
     /**
      * The player's hand of cards
      */
-    private ArrayList<Card> hand = new ArrayList<Card>();
-    /**
-     * The Player's name
-     */
-    private String playerName;
-
+    private List<Card> cards = new ArrayList<Card>();
+    
     /**
      * Holds a set of cards 'a hand' for a player
      * @param playerName the name of the player
-     * @param hand the hand for the player
+     * @param cards the hand for the player
      */
-    public PlayerHand(String playerName, ArrayList<Card> hand) {
-        this.playerName = playerName;
-        this.hand = hand;
+    public Hand(List<Card> cards) {
+        this.cards = cards;
     }
 
     /**
      * get the hand for this player
      * @return the hand for this player.
      */
-    public ArrayList<Card> getHand() {
-        return hand;
+    public List<Card> getCards() {
+        return cards;
     }
 
     /**
-     * get the name of this player
-     * @return the name of this player.
+     * removes all cards from the hand
      */
-    public String getPlayerName() {
-        return playerName;
+    public void clear(){
+    	cards.clear();
     }
 
     /**
-     * Checks to see if this player has the card in question.
+     * Checks to see if this player has the card in question. (card equality is based on rank and suit, not the same obj)
      * @param copy some other copy of the card the player inquires to have.
      * @return true if the player has this card
      */
     public boolean hasCard(Card other) {
-        for(Card card: hand){
-            if(card.equals(other)){
-                return true;
-            }
-        }
-        return false;
+       return cards.stream().anyMatch(c -> c.equals(other));
     }
 
     /**
      * Removes a card from the players hand. (to be used when playing cards)
-     * @param topull the intended card to pull from the hand (well, a copy of it, uses equals to check equivalancy)
+     * @param to pull the intended card to pull from the hand (well, a copy of it, uses equals to check equivalency)
      * @return the card being removed from the hand. (should use this copy of the hand to add to the trick)
      * @throws IllegalPlay throws an IllegalPlay exception if this player does not have this card to pull
      */
     public Card pullCard(Card topull) throws IllegalPlay {
-        ListIterator i = hand.listIterator();
-        while(i.hasNext()){
-            Card currCard = (Card)i.next();
-            if(currCard.equals(topull)){//card is the same as the card passed
-                i.remove();//remove the card
-                return currCard; //return the removed card.
-            }
-        }
-        throw new IllegalPlay(playerName, "The " + topull.getName() + " is not in " + playerName + "'s hand to pull/play.");
+        boolean found = cards.removeIf(c -> c.equals(topull));       
+        if (found == false) throw new IllegalPlay("", "The card " + topull.getName() + " is not in player's hand to pull/play.");
+        else return topull.clone(); //extra safety that we don't use the card the player has a reference to.  
     }
 
 
     /**
-     * Removes a card from the player's hand (using the pullCard function) and then replaces it with a new card
+     * Removes a card from the player's hand (using the pullCard function) and then replaces it with a new card (the face-up card from the kitty)
      * @param toAdd the card to add
-     * @param topull the intended card to pull from the hand (well, a copy of it, uses equals to check equivalancy)
+     * @param topull the intended card to pull from the hand ( a copy of it, uses equals to check equivalancy)
      * @return  the card being removed from the hand. (should use this copy of the hand to add back to the kitty)
      * @throws IllegalPlay throws an IllegalPlay exception if this player does not have this card to pull (or if the card to add was already in the player's hand)
      */
     public Card swapWithFaceUpCard(Card toAdd, Card topull) throws IllegalPlay{
         if (hasCard(toAdd)){
-            throw new IllegalPlay(playerName, "The card " + toAdd.getName() + " which claims to be from the kitty and is being swapped in-hand is already in " + playerName + "'s hand");
-        }else{ //note: pullcard validates that the player has the card to pull.
-            hand.add(toAdd);
+            throw new IllegalPlay("", "The card " + toAdd.getName() + " which claims to be from the kitty and is being swapped in-hand is already in the player's hand");
+        }else{  //note: pullcard validates that the player has the card to pull.
+            cards.add(toAdd);
             return pullCard(topull);
         }
     }
@@ -107,59 +96,8 @@ public class PlayerHand implements Cloneable, Serializable {
      * Return the cards in this hand
      * @return the cards in the hand
      */
-    public ArrayList<Card> showHand(){
-        return hand;
-    }
-
-    /**
-     * Return the cards that may be played given the suit that was led (Helpful for not accidentally playing illegal cards!)
-     * @param led the card that led (the trick)
-     * @param trump the trump so that you know you can play the left bower, or can't play a certain jack.
-     * @return the list of cards that may be played.
-     */
-    public ArrayList<Card> showLegalPlays(Card led, Suit trump){
-        ArrayList<Card> legalCards = new ArrayList<Card>();
-        for(Card card: hand){
-            if(card.getSuit(trump) == led.getSuit(trump)){
-                legalCards.add(card);
-            }
-        }
-        if(legalCards.isEmpty()){
-            return hand;
-        }else{
-            return legalCards;
-        }
-    }
-
-    /**
-     * Returns only cards that are trump from the player's hand
-     * @param trump the suit that is trump
-     * @return all trump cards in the player's hand
-     */
-    public ArrayList<Card> showTrumpCards(Suit trump){
-        ArrayList<Card> trumpCards = new ArrayList<Card>();
-        for(Card card: hand){
-            if(card.getSuit(trump) == trump){
-                trumpCards.add(card);
-            }
-        }
-        return trumpCards;
-    }
-
-
-    /**
-     * Returns only cards that are NOT trump from the player's hand
-     * @param trump the suit that is trump
-     * @return all non-trump cards in the player's hand
-     */
-    public ArrayList<Card> showNonTrumpCards(Suit trump){
-        ArrayList<Card> trumpCards = new ArrayList<Card>();
-        for(Card card: hand){
-            if(card.getSuit(trump) != trump){
-                trumpCards.add(card);
-            }
-        }
-        return trumpCards;
+    public List<Card> cards(){
+        return cards;
     }
 
 
@@ -170,13 +108,7 @@ public class PlayerHand implements Cloneable, Serializable {
      * @return true if the hand contains at least one card of that suit.
      */
     public boolean hasSuit(Suit suit, Suit trump){
-        for(Card card : hand){
-            if(card.getSuit(trump) == suit){
-                return true;
-            }
-        }
-        return false;
-
+    	return cards.stream().anyMatch(c -> c.getSuit(trump) == suit);
     }
 
     /**
@@ -184,11 +116,7 @@ public class PlayerHand implements Cloneable, Serializable {
      * @return
      */
     public String toString(){
-        String stringhand = "";
-        for(Card card : hand){
-            stringhand = stringhand + card.toString() + ", ";
-        }
-        return stringhand;
+    	return cards.stream().map(c -> c.toString()).collect(Collectors.joining(", "));
     }
 
     /**
@@ -196,12 +124,9 @@ public class PlayerHand implements Cloneable, Serializable {
      * @return a COPY of this player's hand.
      */
     @Override
-    public PlayerHand clone(){
-        ArrayList<Card> clonecards = new ArrayList<Card>();
-        for(Card card : hand){
-            clonecards.add(card.clone());
-        }
-        return new PlayerHand(new String(playerName),clonecards);
+    public Hand clone(){
+        List<Card> clonecards = cards.stream().map(c -> c.clone()).collect(Collectors.toList());
+        return new Hand(clonecards);
     }
 
 }

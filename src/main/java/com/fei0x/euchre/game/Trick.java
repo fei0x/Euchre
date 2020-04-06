@@ -3,26 +3,33 @@
  * and open the template in the editor.
  */
 
-package com.n8id.n8euchregame;
+package com.fei0x.euchre.game;
 
-import com.n8id.n8euchreexceptions.IllegalPlay;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * An ordered set of plays, placed into an array, at most size 4. (3 if the trick is played in a lone round)
  * The first element in the array is the led play.
- * The full set of 3/4 plays creats the trick, which is taken by a player (who will end up leading the next trick)
+ * The full set of 4 (or 3) plays creates the trick, which is taken by a player (who will end up leading the next trick)
  * Tricks in progress will be presented to the players to decide which card to play on the current trick.
  * Past tricks should be accessible to all players at all times through the EuchreGame class. Because everybody has perfect memory....
+ * Tricks do not carry references to players to avoid players getting references to othe players
  * @author jsweetman
  */
 public class Trick implements Cloneable, Serializable {
-
+	
     /**
+	 * ID for Serialization
+	 */
+	private static final long serialVersionUID = 1L;
+
+	/**
      * The set of ordered plays in this trick (3 or 4 total depending on 'alonePlay')
      */
-    private ArrayList<Play> plays = new ArrayList<Play>() ;
+    private List<Play> plays = new ArrayList<Play>() ;
 
     /**
      * A record of the player who took this trick.
@@ -40,8 +47,30 @@ public class Trick implements Cloneable, Serializable {
      */
     private boolean alonePlay;
 
+
     /**
-     * An empty trick constructor
+     * Get the plays in this trick.
+     * @return all the plays in the trick so far.
+     */
+    public List<Play> getPlays(){
+        return plays;
+    }
+
+    /**
+     * Get the trump for this trick (which was passed down from the round)
+     * @return get the trump
+     */
+    public Suit getTrump(){
+        return trump;
+    }
+    
+
+    
+    
+    /**
+     * Trick constructor, for a new empty trick
+     * @param trump the trump to be applied to the trick.
+     * @param alonePlay is this trick happening in a play alone round (should only have 3 cards instead of 4).
      */
     public Trick(Suit trump, boolean alonePlay){
         this.trump = trump;
@@ -49,14 +78,19 @@ public class Trick implements Cloneable, Serializable {
     }
 
     /**
-     * Add the next play to the trick. Calculate the trick taker (current leader or final leader depending on the number of tricks played)
-     * If this is called once the trick is comlete, nothing happens.
+     * Add the next play to the trick. (Update the current trick taker, if the play is the last play)
+     * If this is called once the trick is complete, nothing happens.
+     * Cloning the card as it comes into ensure it's not one a player ai has reference to.
      * @param nextPlay the next play to add.
      */
     public void addPlay(String player, Card card){
-        if(isTrickComplete()){ return; }
-        plays.add(new Play(player, card));
-        trickTaker = getWinningPlay(plays, trump).getPlayer();
+        if(isTrickComplete()){ return; } //ignore any cards trying to be added to the trick after
+        
+        plays.add(new Play(player, card.clone()));
+        
+        if(isTrickComplete()){
+            trickTaker = determineWinningPlay().getPlayer();
+        }
     }
 
 
@@ -76,7 +110,7 @@ public class Trick implements Cloneable, Serializable {
      */
     public Play getLedPlay() throws IllegalStateException {
         if(isTrickEmpty()){
-            throw new IllegalStateException("The trick is not complete. There is no trick taker yet.");
+            throw new IllegalStateException("The trick has not started there is no play led yet.");
         }
         return plays.get(0);
     }
@@ -89,7 +123,6 @@ public class Trick implements Cloneable, Serializable {
     public Card getLedCard() throws IllegalStateException {
         return getLedPlay().getCard();
     }
-
 
     /**
      * Get which suit led. If you pass true to consider trump the the left bower will be reported as trump suit. Otherwise it will not.
@@ -107,43 +140,21 @@ public class Trick implements Cloneable, Serializable {
 
 
     /**
-     * Get the plays in this trick.
-     * @return all the plays in the trick so far.
-     */
-    public ArrayList<Play> getPlays(){
-        return plays;
-    }
-
-    /**
-     * Get the winning play for this trick
-     * @return the winning play
-     * @throws IllegalStateException if the trick is not complete, a winner is not defined.
-     */
-    public Play getWinningPlay()throws IllegalStateException{
-        if(!isTrickComplete()){
-            throw new IllegalStateException("The trick is not complete. There is no winning play.");
-        }
-        return Trick.getWinningPlay(plays, trump);
-    }
-    
-    /**
      * Get the winning play amongst a list of plays, the first play is assumed to be the led play, and therefore non-trump cards not following suit cannot be the winning play.
      * @param plays the plays to evaluate, the play at element 0 is said to be the led play.
      * @return the winning play. returns null if there are no plays passed in.
      */
-    private static Play getWinningPlay(ArrayList<Play> plays, Suit currentTrump ){
-        Play topPlay = null;
-        //iterate through all plays
-        for(Play play : plays){
-            if(topPlay == null){//if it's the first card set it.
-                topPlay = play;
-            }else if(play.getCard().isStrongerThan(topPlay.getCard(),currentTrump)){//see if this card is stronger than the top one
-                //if the card is stronger swap it.
-                topPlay = play;
-            }//otherwise it's no better.. do nothing.
-        }
-        return topPlay;
-
+    private Play determineWinningPlay(){     
+        //sort the cards by which beats which, and take the top
+    	Play topPlay = null;
+    	for(Play p : plays){
+    		if(topPlay == null){
+    			topPlay = p;
+    		}else if(p.getCard().beats(topPlay.getCard(),trump)){
+    			topPlay = p;
+    		}
+    	}
+    	return topPlay;
     }
 
     /**
@@ -178,42 +189,26 @@ public class Trick implements Cloneable, Serializable {
      * @return true if the card is in the trick.
      */
     public boolean hasCard(Card card){
-        for(Play play: plays){
-            if(play.getCard().equals(card)){
-                return true;
-            }
-        }
-        return false;
+        return plays.stream().map(p -> p.getCard()).anyMatch(c -> c.equals(card));
     }
 
     /**
-     * Get the trump for this trick (which was passed down from the round)
-     * @return get the trump
-     */
-    public Suit getTrump(){
-        return trump;
-    }
-
-    /**
-     * Makes a copy of the trick, so that players who get their hands on tricks, will actually get their hands on copys. that way they can't cheat!!
+     * Makes a copy of the trick, so that players who get their hands on tricks, will actually get their hands on copies. that way they can't cheat!!
+     * Need a 'deep' copy to ensure the cards are cloned
      * @return a COPY of this trick.
      */
     @Override
     protected Trick clone(){
-        ArrayList<Play> cloneplays = new ArrayList<Play>();
-        for(Play play : plays){
-            cloneplays.add(play.clone());
-        }
-        return new Trick(cloneplays,trickTaker,trump,alonePlay);
+        List<Play> clonedplays = plays.stream().map(p -> p.clone()).collect(Collectors.toList());
+        return new Trick(clonedplays,trickTaker,trump,alonePlay);
     }
-
 
     /**
      * A private constructor for the clone function
      * @param plays
      * @param trickTaker
      */
-    private Trick(ArrayList<Play> plays, String trickTaker,Suit trump, boolean alonePlay){
+    private Trick(List<Play> plays, String trickTaker,Suit trump, boolean alonePlay){
         this.plays = plays;
         this.trickTaker = trickTaker;
         this.trump = trump;

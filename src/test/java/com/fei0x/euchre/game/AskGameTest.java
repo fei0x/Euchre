@@ -3,10 +3,18 @@
  * and open the template in the editor.
  */
 
-package com.n8id.n8euchregame;
+package com.fei0x.euchre.game;
 
-import com.n8id.n8euchreplayers.Player;
-import java.util.ArrayList;
+import com.fei0x.euchre.game.AskGameImpl;
+import com.fei0x.euchre.game.Card;
+import com.fei0x.euchre.game.EuchreGame;
+import com.fei0x.euchre.game.Suit;
+import com.fei0x.euchre.game.Trick;
+import com.fei0x.euchre.player_ai.PlayerAI;
+import com.fei0x.euchre.game.Player;
+
+import java.util.List;
+
 import junit.framework.TestCase;
 
 /**
@@ -35,11 +43,11 @@ public class AskGameTest extends TestCase {
     public void testSpeak() {
         System.out.println("speak");
         String somethingToSay = "!!!WRITE-THIS-TO-STANDARD-OUT!!!";
-        Player p1 = new PlayerImpl("p1");
-        Player p2 = new PlayerImpl("p2");
-        Player p3 = new PlayerImpl("p3");
-        Player p4 = new PlayerImpl("p4");
-        AskGameImpl instance = new AskGameImpl(new EuchreGame(p1,p2,p3,p4,1,System.out), p1.getName());
+        Player p1 = new Player("p1", new PlayerAIImpl());
+        Player p2 = new Player("p2", new PlayerAIImpl());
+        Player p3 = new Player("p3", new PlayerAIImpl());
+        Player p4 = new Player("p4", new PlayerAIImpl());
+        AskGameImpl instance = new AskGameImpl(new EuchreGame(p1,p2,p3,p4,1,System.out), p1);
         instance.speak(somethingToSay);
     }
 
@@ -48,13 +56,13 @@ public class AskGameTest extends TestCase {
      */
     public void testGetPastTricks() {
         System.out.println("getPastTricks");
-        Player p1 = new PlayerImpl("p1");
-        Player p2 = new PlayerImpl("p2");
-        Player p3 = new PlayerImpl("p3");
-        Player p4 = new PlayerImpl("p4");
-        AskGameImpl instance = new AskGameImpl(new EuchreGame(p1,p2,p3,p4,1,System.out), p1.getName());
+        Player p1 = new Player("p1", new PlayerAIImpl());
+        Player p2 = new Player("p2", new PlayerAIImpl());
+        Player p3 = new Player("p3", new PlayerAIImpl());
+        Player p4 = new Player("p4", new PlayerAIImpl());
+        AskGameImpl instance = new AskGameImpl(new EuchreGame(p1,p2,p3,p4,1,System.out), p1);
         try{
-            ArrayList result = instance.getPastTricks();
+            instance.pastTricks();
             assertTrue(false);
         }catch(Exception e){}
     }
@@ -64,15 +72,15 @@ public class AskGameTest extends TestCase {
      */
     public void testGetMyTeamsScore() {
         System.out.println("getMyTeamsScore");
-        Player p1 = new PlayerImpl("p1");
-        Player p2 = new PlayerImpl("p2");
-        Player p3 = new PlayerImpl("p3");
-        Player p4 = new PlayerImpl("p4");
+        Player p1 = new Player("p1", new PlayerAIImpl());
+        Player p2 = new Player("p2", new PlayerAIImpl());
+        Player p3 = new Player("p3", new PlayerAIImpl());
+        Player p4 = new Player("p4", new PlayerAIImpl());
         EuchreGame game = new EuchreGame(p1,p2,p3,p4,1,System.out);
         game.getTeams().get(0).increaseScore(5);
-        AskGameImpl instance = new AskGameImpl(game, p1.getName());
+        AskGameImpl instance = new AskGameImpl(game, p1);
         int expResult = 5;
-        int result = instance.getMyTeamsScore();
+        int result = instance.myTeamsScore();
         assertEquals(expResult, result);
     }
 
@@ -81,15 +89,15 @@ public class AskGameTest extends TestCase {
      */
     public void testGetOpponentsScore() {
         System.out.println("getOpponentsScore");
-        Player p1 = new PlayerImpl("p1");
-        Player p2 = new PlayerImpl("p2");
-        Player p3 = new PlayerImpl("p3");
-        Player p4 = new PlayerImpl("p4");
+        Player p1 = new Player("p1", new PlayerAIImpl());
+        Player p2 = new Player("p2", new PlayerAIImpl());
+        Player p3 = new Player("p3", new PlayerAIImpl());
+        Player p4 = new Player("p4", new PlayerAIImpl());
         EuchreGame game = new EuchreGame(p1,p2,p3,p4,1,System.out);
         game.getTeams().get(1).increaseScore(8);
-        AskGameImpl instance = new AskGameImpl(game, p1.getName());
+        AskGameImpl instance = new AskGameImpl(game, p1);
         int expResult = 8;
-        int result = instance.getOpponentsScore();
+        int result = instance.opponentsScore();
         assertEquals(expResult, result);
     }
 
@@ -98,13 +106,13 @@ public class AskGameTest extends TestCase {
      */
     public void testGetPartnersName() {
         System.out.println("getPartnersName");
-        Player p1 = new PlayerImpl("p1");
-        Player p2 = new PlayerImpl("p2");
-        Player p3 = new PlayerImpl("p3");
-        Player p4 = new PlayerImpl("p4");
-        AskGameImpl instance = new AskGameImpl(new EuchreGame(p1,p2,p3,p4,1,System.out), p1.getName());
+        Player p1 = new Player("p1", new PlayerAIImpl());
+        Player p2 = new Player("p2", new PlayerAIImpl());
+        Player p3 = new Player("p3", new PlayerAIImpl());
+        Player p4 = new Player("p4", new PlayerAIImpl());
+        AskGameImpl instance = new AskGameImpl(new EuchreGame(p1,p2,p3,p4,1,System.out), p1);
         String expResult = "p2";
-        String result = instance.getPartnersName();
+        String result = instance.partnersName();
         assertEquals(expResult, result);
     }
 
@@ -113,21 +121,21 @@ public class AskGameTest extends TestCase {
      */
     public void testGetOpponents() {
         System.out.println("getOpponents");
-        Player p1 = new PlayerImpl("p1");
-        Player p2 = new PlayerImpl("p2");
-        Player p3 = new PlayerImpl("p3");
-        Player p4 = new PlayerImpl("p4");
-        AskGameImpl instance = new AskGameImpl(new EuchreGame(p1,p2,p3,p4,1,System.out), p1.getName());
-        ArrayList<String> result = instance.getOpponents();
+        Player p1 = new Player("p1", new PlayerAIImpl());
+        Player p2 = new Player("p2", new PlayerAIImpl());
+        Player p3 = new Player("p3", new PlayerAIImpl());
+        Player p4 = new Player("p4", new PlayerAIImpl());
+        AskGameImpl instance = new AskGameImpl(new EuchreGame(p1,p2,p3,p4,1,System.out), p1);
+        List<String> result = instance.opponentsNames();
         assertEquals("p3", result.get(0));
         assertEquals("p4", result.get(1));
     }
 
 
-    public class PlayerImpl extends Player {
+    public class PlayerAIImpl extends PlayerAI {
 
-        public PlayerImpl(String name) {
-            super(name);
+        public PlayerAIImpl() {
+            super();
         }
 
         public boolean callItUp(Card faceUpCard) {

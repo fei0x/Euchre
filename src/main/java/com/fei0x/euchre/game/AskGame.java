@@ -3,24 +3,30 @@
  * and open the template in the editor.
  */
 
-package com.n8id.n8euchregame;
+package com.fei0x.euchre.game;
 
-import com.n8id.n8euchreexceptions.MissingPlayer;
-import java.util.ArrayList;
+import java.util.List;
+
+import com.fei0x.euchre.exceptions.MissingPlayer;
 
 /**
- *
+ * Interface to define how players can see what is happening in the game.
+ * The player AI will use this 'window' to gather all the information they need to determin what moves they will make, when prompted.
  * @author jsweetman
  */
 public interface AskGame {
 
+    public String myName();
+    public List<Card> myHand();
     public void speak(String somethingToSay);
-    public ArrayList<Trick> getPastTricks() throws IllegalStateException;
-    public int getMyTeamsScore() throws MissingPlayer;
-    public int getOpponentsScore();
-    public String getPartnersName();
-    public ArrayList<String> getOpponents();
+    public List<Trick> pastTricks() throws IllegalStateException;
+    public String myTeamName();
+    public String opponentsTeamName();
+    public int myTeamsScore() throws MissingPlayer;
+    public int opponentsScore();
+    public String partnersName();
+    public List<String> opponentsNames();
     public String whoIsDealer();
-    public String getLeadPlayer();
+    public String whoIsLeadPlayer();
 
 }

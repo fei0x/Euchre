@@ -3,9 +3,14 @@
  * and open the template in the editor.
  */
 
-package com.n8id.n8euchregame;
+package com.fei0x.euchre.game;
 
-import java.util.ArrayList;
+import com.fei0x.euchre.game.Card;
+import com.fei0x.euchre.game.Play;
+import com.fei0x.euchre.game.Rank;
+import com.fei0x.euchre.game.Suit;
+import com.fei0x.euchre.game.Trick;
+
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -151,7 +156,7 @@ public class TrickTest extends TestCase {
         System.out.println("getLedPlay2");
         Trick instance = new Trick(Suit.CLUBS, false);
         try{
-            Play result = instance.getLedPlay();
+            instance.getLedPlay();
             assertTrue(false);
         }catch(Exception e){
 
@@ -181,7 +186,7 @@ public class TrickTest extends TestCase {
         System.out.println("getLedCard2");
         Trick instance = new Trick(Suit.CLUBS, false);
         try{
-            Card result = instance.getLedCard();
+            instance.getLedCard();
             assertTrue(false);
         }catch(Exception e){
 
@@ -212,7 +217,7 @@ public class TrickTest extends TestCase {
         System.out.println("getLedSuit2");
         Trick instance = new Trick(Suit.SPADES, false);
         try{
-            Suit result = instance.getLedSuit(true);
+            instance.getLedSuit(true);
             assertTrue(false);
         }catch(Exception e){
 
@@ -278,10 +283,10 @@ public class TrickTest extends TestCase {
     }
 
     /**
-     * Test of getWinningPlay method, of class Trick.
+     * Test of getTrickTaker method, of class Trick.
      */
-    public void testGetWinningPlay() {
-        System.out.println("getWinningPlay");
+    public void testGetTrickTaker() {
+        System.out.println("getTrickTaker");
         Trick instance = new Trick(Suit.CLUBS, false);
         String player1 = "player1";
         Card card1 = new Card(Rank.JACK, Suit.SPADES);
@@ -295,16 +300,16 @@ public class TrickTest extends TestCase {
         String player4 = "player4";
         Card card4 = new Card(Rank.ACE, Suit.CLUBS);
         instance.addPlay(player4, card4);
-        Play result = instance.getWinningPlay();
-        assertEquals(result.getCard().getName(), card1.getName());
-        assertEquals(result.getPlayer(), player1);
+        String result = instance.getTrickTaker();
+        System.out.println("result: " + result);
+        assertEquals(result, player1);
     }
 
     /**
-     * Test of getWinningPlay method, of class Trick.
+     * Test of getTrickTaker method, of class Trick.
      */
-    public void testGetWinningPlay2() {
-        System.out.println("getWinningPlay2");
+    public void testGetTrickTaker2() {
+        System.out.println("getTrickTaker2");
         Trick instance = new Trick(Suit.CLUBS, false);
         String player1 = "player1";
         Card card1 = new Card(Rank.JACK, Suit.CLUBS);
@@ -318,16 +323,16 @@ public class TrickTest extends TestCase {
         String player4 = "player4";
         Card card4 = new Card(Rank.ACE, Suit.CLUBS);
         instance.addPlay(player4, card4);
-        Play result = instance.getWinningPlay();
-        assertEquals(result.getCard().getName(), card1.getName());
-        assertEquals(result.getPlayer(), player1);
+        String result = instance.getTrickTaker();
+        System.out.println("result: " + result);
+        assertEquals(result, player1);
     }
 
     /**
-     * Test of getWinningPlay method, of class Trick.
+     * Test of getTrickTaker method, of class Trick.
      */
-    public void testGetWinningPlay3() {
-        System.out.println("getWinningPlay3");
+    public void testGetTrickTaker3() {
+        System.out.println("getTrickTaker3");
         Trick instance = new Trick(Suit.CLUBS, false);
         String player1 = "player1";
         Card card1 = new Card(Rank.TEN, Suit.CLUBS);
@@ -341,16 +346,16 @@ public class TrickTest extends TestCase {
         String player4 = "player4";
         Card card4 = new Card(Rank.ACE, Suit.CLUBS);
         instance.addPlay(player4, card4);
-        Play result = instance.getWinningPlay();
-        assertEquals(result.getCard().getName(), card4.getName());
-        assertEquals(result.getPlayer(), player4);
+        String result = instance.getTrickTaker();
+        System.out.println("result: " + result);
+        assertEquals(result, player4);
     }
 
     /**
-     * Test of getWinningPlay method, of class Trick.
+     * Test of getTrickTaker method, of class Trick.
      */
-    public void testGetWinningPlay4() {
-        System.out.println("getWinningPlay4");
+    public void testGetTrickTaker4() {
+        System.out.println("getTrickTaker4");
         Trick instance = new Trick(Suit.SPADES, false);
         String player1 = "player1";
         Card card1 = new Card(Rank.TEN, Suit.CLUBS);
@@ -364,16 +369,16 @@ public class TrickTest extends TestCase {
         String player4 = "player4";
         Card card4 = new Card(Rank.ACE, Suit.CLUBS);
         instance.addPlay(player4, card4);
-        Play result = instance.getWinningPlay();
-        assertEquals(result.getCard().getName(), card4.getName());
-        assertEquals(result.getPlayer(), player4);
+        String result = instance.getTrickTaker();
+        System.out.println("result: " + result);
+        assertEquals(result, player4);
     }
 
     /**
-     * Test of getWinningPlay method, of class Trick.
+     * Test of getTrickTaker method, of class Trick.
      */
-    public void testGetWinningPlay5() {
-        System.out.println("getWinningPlay5");
+    public void testGetTrickTaker5() {
+        System.out.println("getTrickTaker5");
         Trick instance = new Trick(Suit.SPADES, true);
         String player1 = "player1";
         Card card1 = new Card(Rank.TEN, Suit.CLUBS);
@@ -384,16 +389,16 @@ public class TrickTest extends TestCase {
         String player3 = "player3";
         Card card3 = new Card(Rank.JACK, Suit.DIAMONDS);
         instance.addPlay(player3, card3);
-        Play result = instance.getWinningPlay();
-        assertEquals(result.getCard().getName(), card1.getName());
-        assertEquals(result.getPlayer(), player1);
+        String result = instance.getTrickTaker();
+        System.out.println("result: " + result);
+        assertEquals(result, player1);
     }
 
     /**
-     * Test of getWinningPlay method, of class Trick.
+     * Test of getTrickTaker method, of class Trick.
      */
-    public void testGetWinningPlay6() {
-        System.out.println("getWinningPlay6");
+    public void testGetTrickTaker6() {
+        System.out.println("getTrickTaker6");
         Trick instance = new Trick(Suit.CLUBS, true);
         String player1 = "player1";
         Card card1 = new Card(Rank.JACK, Suit.SPADES);
@@ -402,7 +407,7 @@ public class TrickTest extends TestCase {
         Card card2 = new Card(Rank.ACE, Suit.HEARTS);
         instance.addPlay(player2, card2);
         try{
-            Play result = instance.getWinningPlay();
+            instance.getTrickTaker();
             assertTrue(false);
         }catch(Exception e){}
     }
@@ -410,8 +415,8 @@ public class TrickTest extends TestCase {
     /**
      * Test of getTrickTaker method, of class Trick.
      */
-    public void testGetTrickTaker() {
-        System.out.println("getTrickTaker");
+    public void testGetTrickTaker7() {
+        System.out.println("getTrickTaker7");
         Trick instance = new Trick(Suit.SPADES, false);
         String player1 = "player1";
         Card card1 = new Card(Rank.TEN, Suit.CLUBS);
@@ -426,30 +431,15 @@ public class TrickTest extends TestCase {
         Card card4 = new Card(Rank.ACE, Suit.DIAMONDS);
         instance.addPlay(player4, card4);
         String result = instance.getTrickTaker();
+        System.out.println("result: " + result);
         assertEquals(result, player1);
     }
 
     /**
      * Test of getTrickTaker method, of class Trick.
      */
-    public void testGetTrickTaker2() {
-        System.out.println("getTrickTaker2");
-        Trick instance = new Trick(Suit.SPADES, false);
-        String player1 = "player1";
-        Card card1 = new Card(Rank.TEN, Suit.CLUBS);
-        instance.addPlay(player1, card1);
-        String player2 = "player2";
-        Card card2 = new Card(Rank.KING, Suit.CLUBS);
-        instance.addPlay(player2, card2);
-        String result = instance.getTrickTaker();
-        assertEquals(result, player2);
-    }
-
-    /**
-     * Test of getTrickTaker method, of class Trick.
-     */
-    public void testGetTrickTaker3() {
-        System.out.println("getTrickTaker3");
+    public void testGetTrickTaker8() {
+        System.out.println("getTrickTaker8");
         Trick instance = new Trick(Suit.CLUBS, false);
         String player1 = "player1";
         Card card1 = new Card(Rank.TEN, Suit.CLUBS);
@@ -457,21 +447,46 @@ public class TrickTest extends TestCase {
         String player2 = "player2";
         Card card2 = new Card(Rank.JACK, Suit.SPADES);
         instance.addPlay(player2, card2);
-        String result = instance.getTrickTaker();
-        assertEquals(result, player2);
+        try{
+            instance.getTrickTaker();
+            assertTrue(false);
+        }catch(Exception e){}
     }
 
     /**
      * Test of getTrickTaker method, of class Trick.
      */
-    public void testGetTrickTaker4() {
-        System.out.println("getTrickTaker4");
+    public void testGetTrickTaker9() {
+        System.out.println("getTrickTaker9");
         Trick instance = new Trick(Suit.CLUBS, false);
         try{
-            String result = instance.getTrickTaker();
+            instance.getTrickTaker();
             assertTrue(false);
         }catch(Exception e){}
         
+    }
+
+    /**
+     * Test of getTrickTaker method, of class Trick.
+     */
+    public void testGetTrickTaker10() {
+        System.out.println("getTrickTaker10");
+        Trick instance = new Trick(Suit.CLUBS, false);
+        String player1 = "player1";
+        Card card1 = new Card(Rank.NINE, Suit.CLUBS);
+        instance.addPlay(player1, card1);
+        String player2 = "player2";
+        Card card2 = new Card(Rank.ACE, Suit.HEARTS);
+        instance.addPlay(player2, card2);
+        String player3 = "player3";
+        Card card3 = new Card(Rank.ACE, Suit.CLUBS);
+        instance.addPlay(player3, card3);
+        String player4 = "player4";
+        Card card4 = new Card(Rank.TEN, Suit.CLUBS);
+        instance.addPlay(player4, card4);
+        String result = instance.getTrickTaker();
+        System.out.println("result: " + result);
+        assertEquals(result, player3);
     }
 
     /**

@@ -3,16 +3,18 @@
  * and open the template in the editor.
  */
 
-package com.n8id.n8euchretable;
+package com.fei0x.euchre.run;
 
-import com.n8id.n8euchregame.EuchreGame;
-import com.n8id.n8euchreplayers.Player;
+import com.fei0x.euchre.game.EuchreGame;
+import com.fei0x.euchre.game.Player;
+
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 /**
- *
+ * This class plays multiple games and builds statistics around the players successess to determine which PlayerAI implementation is the best
  * @author jsweetman
  */
 public class RoundRobin {
@@ -20,7 +22,7 @@ public class RoundRobin {
     /**
      * The player's in the round robin.
      */
-    private ArrayList<PlayerStats> players = new ArrayList<PlayerStats>();
+    private List<PlayerStats> playerStats = new ArrayList<PlayerStats>();
 
     /**
      * A place to write the round robins output to. As well as any game output.
@@ -39,7 +41,15 @@ public class RoundRobin {
     private int numOfGamesPerArragnement = 1;
 
 
-    public RoundRobin(ArrayList<Player> players, int numOfGamesPerArragnement, int verbose, PrintStream output) throws IllegalArgumentException{
+    /**
+     * Construct a round robin
+     * @param players the players to participate in the round robin (you can have more than 4, but not less)
+     * @param numOfGamesPerArragnement number of games to play with each combination of 4 players
+     * @param verbose the verbose level either 0 - very little, 1 - basics, 2 - full
+     * @param output the stream to print the results to
+     * @throws IllegalArgumentException if there are any issues with the inputs
+     */
+    public RoundRobin(List<Player> players, int numOfGamesPerArragnement, int verbose, PrintStream output) throws IllegalArgumentException{
         if(players.size() < 4){
             throw new IllegalArgumentException("There must be at minimum four players to play a round robin.");
         }
@@ -47,70 +57,57 @@ public class RoundRobin {
         this.numOfGamesPerArragnement = numOfGamesPerArragnement;
         this.out = output;
 
-        //confirm player names are unique and setup player stats
-        for(int i= 0; i < players.size(); i++){
-            for(int j= i+1; j < players.size(); j++){
-                if(players.get(i).getName().equalsIgnoreCase(players.get(j).getName())){
-                    throw new IllegalArgumentException("Player" + i + " (" + players.get(i).getName() + ") and Player" + j + "(" + players.get(i).getName() + ") share the same name");
-                }
-            }
-            //player has a unique name, set up stats for them.
-            this.players.add(new PlayerStats(players.get(i)));
+        
+        //confirm player names are unique
+        if ( players.size() !=  players.stream().map(p -> p.getName()).distinct().count()){
+        	throw new IllegalArgumentException("Multiple players are sharing the same name. All player names must be unique.");
         }
+        
+        //setup player stats for each player
+        players.stream().forEach(p -> playerStats.add(new PlayerStats(p)));
     }
 
 
     /**
-     * Play the round robin... if you play more than once the player's stats from the last round robin will carry over, except wins/loses...
+     * Play the round robin... if you play a round robin more than once the player's stats from the last round robin will carry over, but everything is reset
      */
     public void playRoundRobin(){
-        for(PlayerStats stats : players){
-            //clear wins/losses:
-            stats.loses = 0;
-            stats.wins = 0;
-        }
+        //clear wins/losses:
+    	playerStats.stream().forEach(s -> {s.loses = 0; s.wins = 0;});
+    	
+    	//setup the 'seats' at the table
         PlayerStats playera;
         PlayerStats playerb;
         PlayerStats playerc;
         PlayerStats playerd;
-        for(int a = 0; a < players.size(); a++){
-            for(int b = a+1; b < players.size(); b++){
-                playera = players.get(a);
-                playerb = players.get(b);
+        
+        //Iterate through all player combinations:
+        //first find team1 players a and b
+        //then find team2 players c and d
+        for(int a = 0; a < playerStats.size(); a++){
+            for(int b = a+1; b < playerStats.size(); b++){
+                playera = playerStats.get(a);
+                playerb = playerStats.get(b);
                 //playera and playerb are the first team, find the second one.
-                for(int c = 0; c < players.size(); c++){
-                    if(c != a && c != b){//makes sure they don't play agains themselves...
-                        for(int d = c+1; d < players.size(); d++){
-                            if(d != a && d != b){//makes sure they don't play agains themselves... again...
+                
+                for(int c = 0; c < playerStats.size(); c++){
+                    if(c != a && c != b){  //makes sure they don't play against themselves...
+                        for(int d = c+1; d < playerStats.size(); d++){
+                            if(d != a && d != b){  //makes sure they don't play against themselves... again...
                                 if(!(a < c || b < c)){//make sure they dont play a team they've already played.
-                                    playerc = players.get(c);
-                                    playerd = players.get(d);
-                                    //playerc and playerd are the first team. play the matches
+                                	
+                                    playerc = playerStats.get(c);
+                                    playerd = playerStats.get(d);
+                                    //playerc and playerd are the second team. 
+                                    
+                                    //play the matches
                                     for(int games = 0; games < numOfGamesPerArragnement; games++){
                                         EuchreGame game = new EuchreGame(playera.player,playerb.player,playerc.player,playerd.player,verbose,out);
                                         game.playGame();
-                                        ArrayList<Player> winners = game.getWinningPlayers();
-                                        if(playera.player == winners.get(0) || playera.player == winners.get(1)){
-                                            playera.wins++;
-                                        }else{
-                                            playera.loses++;
-                                        }
-                                        if(playerb.player == winners.get(0) || playerb.player == winners.get(1)){
-                                            playerb.wins++;
-                                        }else{
-                                            playerb.loses++;
-                                        }
-                                        if(playerc.player == winners.get(0) || playerc.player == winners.get(1)){
-                                            playerc.wins++;
-                                        }else{
-                                            playerc.loses++;
-                                        }
-                                        if(playerd.player == winners.get(0) || playerd.player == winners.get(1)){
-                                            playerd.wins++;
-                                        }else{
-                                            playerd.loses++;
-                                        }
+                                        playerStats.stream().filter(ps -> game.getWinningPlayers().contains(ps.player)).forEach(ps -> ps.wins++);
+                                        playerStats.stream().filter(ps -> game.getLosingPlayers().contains(ps.player)).forEach(ps -> ps.loses++);
                                     }
+                                    
                                 }
                             }
                         }
@@ -126,28 +123,30 @@ public class RoundRobin {
 
         //all games have been played, print results.
         //sort the players by wins.
-        Collections.sort(players);
+        Collections.sort(playerStats);
+
         int position = 1;
-        //print out first place seperatly, need to compare in the loop to show ties.
-        PlayerStats winner = players.get(0);
-        double winpercent = (double)((int)((double)winner.wins / (double)(winner.wins + winner.loses) * 10000)) /100;
-        out.println(position + ")  " + winner.player.getName() + "   Wins: " + winner.wins + "  Loses: " + winner.loses + "  Win%: " + winpercent);
-        for(int i = 1; i < players.size(); i++){
-            PlayerStats player = players.get(i);
-            if(player.wins < players.get(i-1).wins){
+        
+        //print out first place separately, need to compare in the loop to show ties.
+        PlayerStats winner = playerStats.get(0);
+        out.println(position + ")  " + winner.statString());
+        
+        for(int i = 1; i < playerStats.size(); i++){
+            PlayerStats player = playerStats.get(i);
+            if(player.wins < playerStats.get(i-1).wins){
                 position++;
             }
-            winpercent = (double)((int)((double)player.wins / (double)(player.wins + player.loses) * 10000)) /100;
-            out.println(position + ")  " + player.player.getName() + "   Wins: " + player.wins + "  Loses: " + player.loses + "  Win%: " + winpercent);
+            out.println(position + ")  " + player.statString());
         }
 
     }
 
+    
 
     /**
      * A subclass which keeps track of each player in the round robin, and their stats for the round robin.
      */
-    private class PlayerStats implements Comparable{
+    private class PlayerStats implements Comparable<PlayerStats>{
 
         /**
          * the player competing in the round robin.
@@ -165,7 +164,7 @@ public class RoundRobin {
         public int loses = 0;
 
         /**
-         * Constructor for Player and stats
+         * Constructor for PlayerStats using a player
          * @param player the player to keep track of.
          */
         public PlayerStats(Player player){
@@ -173,24 +172,29 @@ public class RoundRobin {
         }
 
         /**
+         * Return  the win percentage of this player's wins and loses
+         * @return the win percentage of this player's wins and loses
+         */
+        public double winPercent(){
+        	return ((double)wins / (double)(wins + loses)) * 100;
+        }
+        
+        /**
+         * Return  a string outlining the player's stats
+         * @return a string outlining the player's stats
+         */
+        public String statString(){
+        	return player.getName() + "   Wins: " + wins + "  Loses: " + loses + "  Win%: " + winPercent();
+        }
+        
+        /**
          * Compare function so that the player stats can be sorted by wins.
          * @param the object to compare it to... if it's notPlayerStats will return 0
          * @return 1 if this player has less wins. -1 if it has more, (cause -1 means you come first and we want decending order) 0 if it's the same or the object is not a playerStats
          */
         @Override
-        public int compareTo(Object arg0) {
-            if(arg0 instanceof PlayerStats){
-                if( wins > ((PlayerStats)arg0).wins){
-                    return -1;
-                }else if( wins < ((PlayerStats)arg0).wins){
-                    return 1;
-                }else{
-                    return 0;
-                }
-                
-            }else{
-                return 0;
-            }
+        public int compareTo(PlayerStats arg0) {
+        	return Integer.compare(wins, arg0.wins);
         }
 
     }

@@ -3,10 +3,14 @@
  * and open the template in the editor.
  */
 
-package com.n8id.n8euchregame;
+package com.fei0x.euchre.game;
 
-import com.n8id.n8euchreexceptions.MissingPlayer;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.fei0x.euchre.exceptions.MissingPlayer;
+import com.fei0x.euchre.game.Player;
 
 /**
  * A team is two players as well as some information about their standings in the current game. (aka their score)
@@ -15,10 +19,15 @@ import java.util.ArrayList;
  */
 public class Team {
 
+	/**
+	 * Name of the team, for now it'll just be 1 or 2
+	 */
+    private String name;
+
     /**
      * The 2 players on the team (Reliably always of size 2)
      */
-    private ArrayList<String> players = new ArrayList<String>();
+    private List<Player> players = new ArrayList<Player>();
 
     /**
      * The team's score
@@ -30,33 +39,42 @@ public class Team {
      * @param playerOneName the name of the first player
      * @param playerTwoName the name of the second player
      */
-    public Team(String playerOneName, String playerTwoName){
+    public Team(String teamName, Player playerOneName, Player playerTwoName){
+    	this.name = teamName;
         players.add(playerOneName);
         players.add(playerTwoName);
     }
 
     /**
-     * Get the player names for the first team member
+     * Get the name of the team
      * @return
      */
-    public String getPlayerOne(){
-        return players.get(0);
+    public String getName(){
+        return name;
     }
-
+    
     /**
-     * Get the player names for the second team member
+     * Get both players
      * @return
      */
-    public String getPlayerTwo(){
-        return players.get(1);
+    public List<Player> getPlayers(){
+        return players;
+    }
+    
+    /**
+     * Get both player names
+     * @return
+     */
+    public List<String> playerNames(){
+        return players.stream().map(p -> p.getName()).collect(Collectors.toList());
     }
 
     /**
      * Returns the names of both players together joined with an "&"
      * @return the names of both players together
      */
-    public String getNames(){
-        return players.get(0) + " & " + players.get(1);
+    public String getTeamAndPlayerNames(){
+        return "Team " + name + ": " + players.get(0).getName() + " & " + players.get(1).getName();
     }
 
     /**
@@ -87,13 +105,19 @@ public class Team {
      * @param player the player to check for
      * @return true if the player is on this team
      */
-    public boolean hasMember(String player){
-        if(player.equalsIgnoreCase(players.get(0)) || player.equalsIgnoreCase(players.get(1))){
-            return true;
-        }
-        return false;
+    public boolean hasMember(String playerName){
+    	return players.stream().anyMatch(p -> p.getName().equals(playerName));
     }
 
+    /**
+     * Returns true if the given player is on this team
+     * @param player the player to check for
+     * @return true if the player is on this team
+     */
+    public boolean hasMember(Player player){
+    	return players.stream().anyMatch(p -> p.equals(player));
+    }
+    
 
     /**
      * Returns the name of the teammate of the given player
@@ -101,13 +125,11 @@ public class Team {
      * @return the player's teammate
      * @throws MissingPlayer if the player could not be found.
      */
-    public String getTeammate(String player) throws MissingPlayer{
-        if(player.equalsIgnoreCase(players.get(0))){
-            return players.get(1);
-        }else if(player.equalsIgnoreCase(players.get(1))){
-            return players.get(0);
-        }
-        throw new MissingPlayer("Player " + player + " could not be found on this team.");
+    public Player getTeammate(Player player) throws MissingPlayer{
+    	return players.stream()
+    			.filter(p -> !p.equals(player))
+    			.reduce((a, b) -> {throw new MissingPlayer("Player " + player + " could not be found on this team."); })
+    			.get();	
     }
 
 
@@ -117,17 +139,18 @@ public class Team {
      */
     @Override
     protected Team clone(){
-        return new Team(new String(getPlayerOne()), new String(getPlayerTwo()),score);
+        return new Team(players.get(0), players.get(1), score);
     }
+    
      /**
      * Clone constructor, takes the two players and their score
-     * @param playerOneName the name of the first player
-     * @param playerTwoName the name of the second player
+     * @param playerOne the first player
+     * @param playerTwo the second player
      * @param score the teams score
      */
-    private Team(String playerOneName, String playerTwoName, int score){
-        players.add(playerOneName);
-        players.add(playerTwoName);
+    private Team(Player playerOne, Player playerTwo, int score){
+        this.players.add(playerOne);
+        this.players.add(playerTwo);
         this.score = score;
     }
 }

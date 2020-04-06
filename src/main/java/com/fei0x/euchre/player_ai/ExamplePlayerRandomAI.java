@@ -3,30 +3,29 @@
  * and open the template in the editor.
  */
 
-package com.n8id.n8euchreplayers;
+package com.fei0x.euchre.player_ai;
 
-import com.n8id.n8euchregame.Card;
-import com.n8id.n8euchregame.Suit;
-import com.n8id.n8euchregame.Trick;
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 
+import com.fei0x.euchre.game.Card;
+import com.fei0x.euchre.game.Suit;
+import com.fei0x.euchre.game.Trick;
+
 /**
- * This is an example contender submission for the n8 Euchre Challenge. A contender needs to only, at minimum, complete this class and functions as shown.
- * This example player, plays completely randomly, and makes completely legal movess.
+ * This is an example contender submission for the Euchre Challenge. A contender needs to only, at minimum, complete this class and functions as shown.
+ * This example player, plays completely randomly, and makes completely legal moves.
  * For function descriptions please see the Player class.
- * Tip: don't play euchre randomly... you probably won't win.
+ * Tip: don't play Euchre randomly... you probably won't win.
  * @author jsweetman
  */
-public class ExamplePlayerRandom extends Player {
+public class ExamplePlayerRandomAI extends PlayerAI {
 
     Random rdm = new Random(); //a random generator for this random player.
 
-    public ExamplePlayerRandom(String playerName){
-        super(playerName);
-        //the name of your player goes to the super constructor. like so.
-        //Remember: super must be the first line in this function
+    public ExamplePlayerRandomAI(){
+        super();
     }
 
     @Override
@@ -35,7 +34,8 @@ public class ExamplePlayerRandom extends Player {
         //you will notice that nulls are being passed as parameters to trump fields,
         //  this is ok, as this indicates that trump is not considered when evaluating suit.
         //  (in other words jacks will all 'report' their original suit, and not whatever suit they would take on as the left bower.)
-        if(hand.hasSuit(faceUpCard.getSuit(null), null)){
+        Suit potentialTrump = faceUpCard.getSuit(null);
+        if(Card.findCardsOfSuit(askGame.myHand(), potentialTrump, null).size() > 1){
             return rdm.nextBoolean(); //you can legally tell the dealer to pick up the card, so decide randomly.
         }
         return false; //you can not legally tell the dealer to pick up the card, so don't
@@ -45,10 +45,11 @@ public class ExamplePlayerRandom extends Player {
     public Card swapWithFaceUpCard(Card faceUpCard) {
         //any card can be swapped so chose one randomly
         //first get all the cards in your hand.
-        ArrayList<Card> cards = hand.showHand();
+        List<Card> cards = askGame.myHand();
+        
         //shuffle your hand
         Collections.shuffle(cards);
-        //Tip: don't worry too much about messing up your hand, the game will automatically re-send you your correct hand, after every time your hand changes.
+
         //return the top (random) card
         return cards.get(0); //hopefully it wasn't trump...
     }
@@ -57,11 +58,14 @@ public class ExamplePlayerRandom extends Player {
     public Suit callSuit(Card turnedDownCard) {
         //decide a random suit by drawing a card at random
         //first get all the cards in your hand.
-        ArrayList<Card> cards = hand.showHand();
+        List<Card> cards = askGame.myHand();
+        
         //shuffle your hand
         Collections.shuffle(cards);
+        
         //draw the top (random) card
         Card card = cards.get(0);
+        
         //check to see if it's trump is the same as the invalid suit (suit of the card turned down). if so pass (return null) if not call that suit.
         if(card.getSuit(null) == turnedDownCard.getSuit(null)){
             return null; //pass calling suit
@@ -75,11 +79,14 @@ public class ExamplePlayerRandom extends Player {
     public Suit stickTheDealer(Card turnedDownCard) {
         //decide a random suit by drawing a card at random
         //first get all the cards in your hand.
-        ArrayList<Card> cards = hand.showHand();
+        List<Card> cards = askGame.myHand();
+        
         //shuffle your hand
         Collections.shuffle(cards);
+        
         //draw the top (random) card
         Card card = cards.get(0);
+        
         //because the dealer MUST select a suit, and it must be valid, we'll iterate through the cards until we find the first valid suit to call.
         while(card.getSuit(null) == turnedDownCard.getSuit(null)){//check to see if this suit is the invalid suit.
             //remove that card draw the next.
@@ -100,25 +107,25 @@ public class ExamplePlayerRandom extends Player {
 
     @Override
     public Card playCard(Trick currentTrick) {
-        ArrayList<Card> cards;
+        List<Card> cards;
         //first see if you are the lead player this trick
         if(currentTrick.isTrickEmpty()){
             //you are the trick leader all cards are valid.
-            cards = hand.showHand();
+            cards = askGame.myHand();
         }else{
             //you are not the trick leader, find all the legal plays in your hand. (to follow suit)
-            cards = hand.showLegalPlays(currentTrick.getLedCard(),currentTrick.getTrump());
-//            System.out.println(getName() + "'s hand: " + hand.showHand());
-//            System.out.println(getName() + "'s legalCards: " + (new PlayerHand(getName(),cards)).toString());
+            cards = Card.findLegalCards(askGame.myHand(), currentTrick.getLedCard(), currentTrick.getTrump() );
         }
         //Note: the current trick can tell you who the current leader is, what card led, the suit that led, who played each card and the order the cards where played in.
+
         //randomly shuffle the cards that can legally be played.
         Collections.shuffle(cards);
+        
         //draw the top (random) card
         Card card = cards.get(0);
+        
         //and play it.
         return card;
-        //Note: again you don't need to worry about messing with your hand, as soon as your play is validated, your hand is reset.
     }
 
 

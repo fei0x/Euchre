@@ -3,10 +3,9 @@
  * and open the template in the editor.
  */
 
-package com.n8id.n8euchreplayers;
+package com.fei0x.euchre.player_ai;
 
-import com.n8id.n8euchregame.*;
-import java.util.ArrayList;
+import com.fei0x.euchre.game.*;
 
 /**
  * This abstract class outlines all of the required functionality a contender must fill out to implement a player
@@ -14,7 +13,7 @@ import java.util.ArrayList;
  * A contender is cheating if he/she uses introspection to change the members/functions in this class he/she is not entitled to.
  * @author jsweetman
  */
-public abstract class Player {
+public abstract class PlayerAI {
 
     /***************
      * The following private members cannot be touched by implementations by the player, as they are controlled by the game.
@@ -22,47 +21,10 @@ public abstract class Player {
      ****************/
 
     /**
-     * players name, private so you can't change it.
-     */
-    private String name;
-
-    /**
-     * The interface for asking the current game of euchre questions about the game, such as score, player names, player teams, past tricks, etc.
+     * The interface for asking the current game of Euchre questions about the game, such as score, player names, player teams, past tricks, etc.
      * Assigned at the creation of each game.
      */
     protected AskGame askGame;
-
-    /**
-     * A copy of the player's current hand, so the player can look at it and whatnot,
-     * this hand will be automatically updated each time it changes (the player plays a card, picks-up the face-up card, or a new round begins.)
-     */
-    protected PlayerHand hand;
-
-
-    /**
-     * Protected constructor for the player class. Implementations should use this constructor and pass an imutable name to represent this player to other players and to the game mechanics
-     * @param name the name of this player
-     */
-    protected Player(String name){
-        this.name = name;
-    }
-
-    /**
-     * Returns the player's name
-     * @return the player's name
-     */
-    public final String getName(){
-        return name;
-    }
-
-    /**
-     * Sets the player's hand, so that we can be sure that the player has a hand that is always correct.
-     * Player implementers should avoid using this function, it is only meant to be set by the game class.
-     * @param handCopy a copy of the player's hand so that the player can see what's in their hand.
-     */
-    public void setHand(PlayerHand handCopy) {
-        this.hand = handCopy;
-    }
 
     /**
      * Used by the game, the game sets this to allow the player an interface for asking questions about the game.
@@ -71,7 +33,6 @@ public abstract class Player {
     public void setAskGame(AskGame askGame){
         this.askGame = askGame;
     }
-
 
     /**
      * Call It Up - defines the logic behind the decision of whether or not to tell the dealer (be it yourself or somebody else) to pick up the face-up card (provided) and play with that card's suit as trump. A player may not call a suit trump if they do not have a card of that suit.

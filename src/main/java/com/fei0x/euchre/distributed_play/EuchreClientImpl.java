@@ -3,15 +3,13 @@
  * and open the template in the editor.
  */
 
-package com.n8id.n8euchredistributedplay;
+package com.fei0x.euchre.distributed_play;
 
-import com.n8id.n8euchregame.AskGameImpl;
-import com.n8id.n8euchregame.Card;
-import com.n8id.n8euchregame.PlayerHand;
-import com.n8id.n8euchregame.Suit;
-import com.n8id.n8euchregame.Trick;
-import com.n8id.n8euchreplayers.HumanPlayer;
-import com.n8id.n8euchreplayers.Player;
+import com.fei0x.euchre.game.Card;
+import com.fei0x.euchre.game.Suit;
+import com.fei0x.euchre.game.Trick;
+import com.fei0x.euchre.game.Player;
+
 import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -22,16 +20,23 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
 /**
- *
+ * This class is instantiated by a Euchre Client to connect and communicate to the Euchre Server
  * @author jsweetman
  */
 public class EuchreClientImpl extends UnicastRemoteObject implements EuchreClient{
 
 
     /**
-     * The player who is client-ing into the server euchre game.
+	 *  Serialization ID
+	 */
+	private static final long serialVersionUID = 1L;
+
+	/**
+     * The player who is connecting into the server Euchre game as a client.
+     * This Player hosts the REAL AI implementation
+     * When the server calls the ai methods in this class, they will invoke the real ai logic in here
      */
-    private Player player;
+    private Player remotePlayer;
 
     /**
      * Output for local messages
@@ -44,7 +49,7 @@ public class EuchreClientImpl extends UnicastRemoteObject implements EuchreClien
      ************************/
 
     /**
-     * The server object this client tries to connect to and then communicates to regularily
+     * The server object this client tries to connect to and then communicates to regularly
      */
     EuchreServer server;
 
@@ -59,22 +64,32 @@ public class EuchreClientImpl extends UnicastRemoteObject implements EuchreClien
      *************************/
 
     /**
-     * The port for players to connect to this server.
+     * The port for the server to connect to this client/ remote player
      */
     private int clientPort;
+
     /**
-     * the host for players to connect to this server.
+     * the host for the server to connect to this client/ remote player
      */
     private String clientAddr;
+    
     /**
      * the registry for client connections via RMI
      */
      private Registry registry;
 
 
-    public EuchreClientImpl(Player player,  int clientport, PrintStream localout) throws RemoteException, UnknownHostException{
+    /**
+     * Create a new Euchre Client, this is used to connect to and communicate with the Euchre Server
+     * @param player the player playing remotely
+     * @param clientport
+     * @param localout
+     * @throws RemoteException
+     * @throws UnknownHostException
+     */
+     public EuchreClientImpl(Player player, int clientport, PrintStream localout) throws RemoteException, UnknownHostException{
         this.localout = System.out;
-        this.player = player;
+        this.remotePlayer = player;
         this.clientPort = clientport;
         InetAddress addr = InetAddress.getLocalHost();
         clientAddr = addr.getHostAddress();
@@ -88,6 +103,9 @@ public class EuchreClientImpl extends UnicastRemoteObject implements EuchreClien
 
     }
 
+     /**
+      * Print a message on the client output stream
+      */
     @Override
     public void tellClient(String message) throws RemoteException {
         localout.println(message);
@@ -99,16 +117,16 @@ public class EuchreClientImpl extends UnicastRemoteObject implements EuchreClien
      * @param port the port to connect to
      */
     public void connectToServer(String host, int port) throws UnknownHostException{
-        String serveraddr ="";
+        String serveraddr = "";
         Registry serverRegistry;
         localout.println("Trying to connect to host '" + host + "' on port '" + port + "'");
         try{
             InetAddress serverinet = InetAddress.getByName(host);
             serveraddr = serverinet.getHostAddress();
-            serverRegistry=LocateRegistry.getRegistry(serveraddr,port);
+            serverRegistry = LocateRegistry.getRegistry(serveraddr,port);
             server = (EuchreServer)(serverRegistry.lookup("EuchreServer"));
             localout.println("Server Found. Sending client info: " + clientAddr + " : " + clientPort + " ");
-            sessionID = server.joinServer(player.getName(), clientAddr, clientPort);
+            sessionID = server.joinServer(remotePlayer.getName(), clientAddr, clientPort);
             if(sessionID == 0 || sessionID == -1){
                 if(sessionID == 0){
                     localout.println("Server declined connection.");
@@ -119,7 +137,7 @@ public class EuchreClientImpl extends UnicastRemoteObject implements EuchreClien
             }
             //connection successful, set up player's askRemoteGame communication route
             localout.println("Connection Successful.");
-            player.setAskGame(new AskRemoteGame(server, sessionID, player.getName()));
+            remotePlayer.setAskGame(new AskRemoteGame(server, sessionID, remotePlayer));
 
         }catch(RemoteException re){
             localout.println("Remote Exception error.");
@@ -138,13 +156,14 @@ public class EuchreClientImpl extends UnicastRemoteObject implements EuchreClien
             }catch(Exception e){
                 e.printStackTrace(localout);
                 sessionID = 0;
+                localout.println("Client Player Disconnected.");
             }
         }
     }
     
     
     /**
-     * Tell the client to disconnect.
+     * Used by the server to tell the client to disconnect.
      * @throws RemoteException thrown if this function cannot be called.
      */
     @Override
@@ -158,47 +177,40 @@ public class EuchreClientImpl extends UnicastRemoteObject implements EuchreClien
     
     /*******************************
      * Calls to the Player functions
-     ****/
+     * These calls are made by the server to ask the client player what they want to do
+     * The server calls these using a Mock AI class: RemotePlayerAI
+     *******************************/
 
     @Override
     public boolean callItUp(Card faceUpCard) throws RemoteException {
-        return player.callItUp(faceUpCard);
+        return remotePlayer.getAi().callItUp(faceUpCard);
     }
 
     @Override
     public Card swapWithFaceUpCard(Card faceUpCard) throws RemoteException {
-        return player.swapWithFaceUpCard(faceUpCard);
+        return remotePlayer.getAi().swapWithFaceUpCard(faceUpCard);
     }
 
     @Override
     public Suit callSuit(Card turnedDownCard) throws RemoteException {
-        return player.callSuit(turnedDownCard);
+        return remotePlayer.getAi().callSuit(turnedDownCard);
     }
 
     @Override
     public Suit stickTheDealer(Card turnedDownCard) throws RemoteException {
-        return player.stickTheDealer(turnedDownCard);
+        return remotePlayer.getAi().stickTheDealer(turnedDownCard);
     }
 
     @Override
     public boolean playAlone() throws RemoteException {
-        return player.playAlone();
+        return remotePlayer.getAi().playAlone();
     }
 
     @Override
     public Card playCard(Trick currentTrick) throws RemoteException {
-        return player.playCard(currentTrick);
+        return remotePlayer.getAi().playCard(currentTrick);
     }
 
-    @Override
-    public String getName() throws RemoteException {
-        return player.getName();
-    }
-
-    @Override
-    public void setHand(PlayerHand handCopy) throws RemoteException {
-        player.setHand(handCopy);
-    }
 
 
 

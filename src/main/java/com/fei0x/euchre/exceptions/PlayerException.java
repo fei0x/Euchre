@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package com.n8id.n8euchreexceptions;
+package com.fei0x.euchre.exceptions;
 
 /**
  * The player cause an exception somewhere in their code, which propogated to the game class.
@@ -11,6 +11,12 @@ package com.n8id.n8euchreexceptions;
  */
 public class PlayerException extends Exception {
 
+    /**
+	 * ID for Serialization
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	
     String playername;
 
     /**

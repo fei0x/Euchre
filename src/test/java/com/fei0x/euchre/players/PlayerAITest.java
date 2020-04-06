@@ -3,24 +3,27 @@
  * and open the template in the editor.
  */
 
-package com.n8id.n8euchreplayers;
+package com.fei0x.euchre.players;
 
-import com.n8id.n8euchregame.AskGameImpl;
-import com.n8id.n8euchregame.Card;
-import com.n8id.n8euchregame.EuchreGame;
-import com.n8id.n8euchregame.PlayerHand;
-import com.n8id.n8euchregame.Suit;
-import com.n8id.n8euchregame.Trick;
+import java.util.List;
+
+import com.fei0x.euchre.exceptions.MissingPlayer;
+import com.fei0x.euchre.game.AskGame;
+import com.fei0x.euchre.game.Card;
+import com.fei0x.euchre.game.Suit;
+import com.fei0x.euchre.game.Trick;
+import com.fei0x.euchre.player_ai.PlayerAI;
+
 import junit.framework.TestCase;
 
 /**
  *
  * @author jsweetman
  */
-public class PlayerTest extends TestCase {
+public class PlayerAITest extends TestCase {
     
-    public PlayerTest(String testName) {
-        super(testName);
+    public PlayerAITest() {
+        super();
     }
 
     @Override
@@ -34,44 +37,20 @@ public class PlayerTest extends TestCase {
     }
 
     /**
-     * Test of getName method, of class Player.
-     */
-    public void testGetName() {
-        System.out.println("getName");
-        Player instance = new PlayerImpl("name");
-        String expResult = "name";
-        String result = instance.getName();
-        assertEquals(expResult, result);
-    }
-
-    /**
-     * Test of setHand method, of class Player.
-     */
-    public void testSetHand() {
-        System.out.println("setHand");
-        PlayerHand handCopy = new PlayerHand("name", null);
-        Player instance = new PlayerImpl("name");
-        instance.setHand(handCopy);
-    }
-
-    /**
      * Test of setAskGame method, of class Player.
      */
     public void testSetAskGame() {
         System.out.println("setAskGame");
-        Player p1 = new PlayerImpl("name1");
-        Player p2 = new PlayerImpl("name2");
-        Player p3 = new PlayerImpl("name3");
-        Player p4 = new PlayerImpl("name4");
-        AskGameImpl askGame = new AskGameImpl(new EuchreGame(p1,p2,p3,p4,1,System.out),p1.getName());
-        p1.setAskGame(askGame);
+        PlayerAI ai = new PlayerAIImpl();
+        AskGame askGame = new AskGameTestImpl();
+        ai.setAskGame(askGame);
     }
 
 
-    public class PlayerImpl extends Player {
+    public class PlayerAIImpl extends PlayerAI {
 
-        public PlayerImpl(String name) {
-            super(name);
+        public PlayerAIImpl() {
+            super();
         }
 
         public boolean callItUp(Card faceUpCard) {
@@ -99,4 +78,60 @@ public class PlayerTest extends TestCase {
         }
     }
 
+
+    public class AskGameTestImpl implements AskGame {
+
+        public AskGameTestImpl() {
+            super();
+        }
+
+		public String myName() {
+			return null;
+		}
+
+		public List<Card> myHand() {
+			return null;
+		}
+
+		public void speak(String somethingToSay) {
+		}
+
+		public List<Trick> pastTricks() throws IllegalStateException {
+			return null;
+		}
+
+		public String myTeamName() {
+			return null;
+		}
+
+		public String opponentsTeamName() {
+			return null;
+		}
+
+		public int myTeamsScore() throws MissingPlayer {
+			return 0;
+		}
+
+		public int opponentsScore() {
+			return 0;
+		}
+
+		public String partnersName() {
+			return null;
+		}
+
+		public List<String> opponentsNames() {
+			return null;
+		}
+
+		public String whoIsDealer() {
+			return null;
+		}
+
+		public String whoIsLeadPlayer() {
+			return null;
+		}
+    }
+
+    
 }

@@ -23,4 +23,4 @@
  * AskGame       (is an interface to allow players to inquire about the game in progress.)
  *
  */
-package com.n8id.n8euchregame;
+package com.fei0x.euchre.game;
