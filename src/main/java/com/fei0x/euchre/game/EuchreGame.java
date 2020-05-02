@@ -16,16 +16,35 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Runs the game of Euchre, prompts players to take actions, and manages storing the data and delegating copies to players.
+ * Runs a game of Euchre, prompts player ai to take actions, manages output and protecting data from the AI.
+ * The playGame method can only be run once. After which the winners and losers can be retrieved.
+ * The game manages the progression of the rounds and the score. The rounds store the cards, player roles and the mechanics of the moves
  * @author jsweetman
  */
 public class EuchreGame {
 
+
+    /**
+     * Indicates whether or not to display all the messages or only the essential ones.
+     */
+    private boolean verbose;
+
+    /**
+     * An output stream to write messages to.
+     */
+    private PrintStream messenger;
+    
     /**
      * The two teams playing this round.
      */
     private ArrayList<Team> teams = new ArrayList<Team>();
 
+    /**
+     * The them which won.
+     * Also used to indicate game state, when non-null indicates the game is over.
+     */
+    private Team winningTeam;
+    
     /**
      * The players playing the game in Euchre, seated around in the table in order
      * The first dealer (element 0) and order is determined randomly.
@@ -33,34 +52,20 @@ public class EuchreGame {
     private ArrayList<Player> playersInSeatingOrder = new ArrayList<Player>();
 
     /**
-     * index in the playersInSeatingOrder which denotes the player should be the next dealer
+     * index in the playersInSeatingOrder which denotes the player who is the dealer for the current round
      */
     private int dealerIdx = 0;
     
     /**
-     * An output stream to write messages to.
+     * The completed rounds played in this game of Euchre (may not need...)
+     * By keeping the rounds we're able to track a history of the game
      */
-    private PrintStream messenger;
-
+    private ArrayList<Round> completedRounds = new ArrayList<Round>();
+    
     /**
      * The current incomplete round
      */
-    private Round round;
-
-    /**
-     * The completed rounds played in this game of Euchre (may not need...)
-     */
-    private ArrayList<Round> rounds = new ArrayList<Round>();
-
-    /**
-     * the them which won, indicates the game is over.
-     */
-    private Team winningTeam;
-
-    /**
-     * Indicates whether or not to display all the messages or only the essential ones.
-     */
-    private int verbose;
+    private Round currentRound;
 
 
     /**
@@ -69,20 +74,19 @@ public class EuchreGame {
      * @param team1player2 the second player of the first team
      * @param team2player1 the first player of the second team
      * @param team2player2 the second player of the second team
-     * @param verbose if 2 then print all the messages, if 1 then only essential messages, otherwise don't print any messages.
+     * @param verbose if true then print all the messages, otherwise only essential messages
      * @param ps the print stream to write messages to.
      * @throws IllegalArgumentException thrown if the player names are not unique. As names are provided to other players as unique player identifiers.
      */
-    public EuchreGame(Player team1player1, Player team1player2, Player team2player1, Player team2player2, int verbose, PrintStream ps) throws IllegalArgumentException{
-        messenger = ps;
+    public EuchreGame(Player team1player1, Player team1player2, Player team2player1, Player team2player2, boolean verbose, PrintStream ps) throws IllegalArgumentException{
+    	messenger = ps;
         this.verbose = verbose;
         Random rnd = new Random();
-        
-        //put some new lines to separate from any startup logs
-        writeMessage("",true);
-        writeMessage("",true);
-        
-        
+
+        //put some new lines to separate from any prior logs
+    	writeMessage("",true);
+    	writeMessage("",true);
+    	
         //create teams
         teams.add(new Team("1", team1player1, team1player2));
         teams.add(new Team("2", team2player1, team2player2));
@@ -98,7 +102,7 @@ public class EuchreGame {
         if ( 4 !=  playersInSeatingOrder.stream().map(p -> p.getName()).distinct().count()){
         	throw new IllegalArgumentException("Multiple players are sharing the same name. All player names must be unique.");
         }
-        
+
         //randomly determine player seating order              
         //swap team 1 player seating?
         if(rnd.nextBoolean()){
@@ -119,7 +123,7 @@ public class EuchreGame {
         }
                 
         //assign 'AskGame' to players so they can 'observe' the game they are in.
-        playersInSeatingOrder.stream().forEach(p -> p.setAskGame(new AskGameImpl(this, p)));
+        playersInSeatingOrder.stream().forEach(p -> p.setAskGame(new AskGameImpl(this, p, ps)));
               
 
         //display teams and order
@@ -136,14 +140,21 @@ public class EuchreGame {
         if(winningTeam != null){
             throw new IllegalStateException("The game has already completed, it cannot be re-played.");
         }else{
+        	
             try{
-                //iterate through rounds in this game
+            	
+            	//iterate through rounds in this game
                 while(!checkForWinner()){
 
                     writeMessage("", true);
-                    writeMessage("--Begin Round--", true);
+                    writeMessage("", true);
+                    writeMessage("--Begin Round (" + (completedRounds.size() + 1) + ")--", true);
                 	
-                    ///SETUP THE ROUND///
+                    
+                    /*********************
+                     * SETUP THE ROUND
+                     *********************/
+                    
                     //make player order for round
                     List<Player> playerOrder = new ArrayList<Player>();
                     for(int i = 0; i < 4; i++){
@@ -151,19 +162,22 @@ public class EuchreGame {
                     }
                     
                     //make the round, deal the cards
-                    round = new Round(playerOrder, teams);
-                    writeMessage(round.dealer().getName() + " deals the cards.", true);
+                    currentRound = new Round(playerOrder, teams);
+                    writeMessage(currentRound.dealer().getName() + " deals the cards.", true);
 
                     
                     //get face-up card to share with everybody
-                    Card faceup = round.getFaceUpCardCopy();
-                    writeMessage(round.dealer().getName() + " turns up the top card of the kitty. It is the: " + faceup.getName(), true);
+                    Card faceup = currentRound.getFaceUpCardCopy();
+                    writeMessage(currentRound.dealer().getName() + " turns up the top card of the kitty. It is the: " + faceup.name(), true);
 
                     
                     
-                    ///DETERMINE THE TRUMP AND THE TRUMP CALLING TEAM///
+                    /*********************
+                     * DETERMINE THE TRUMP AND THE TRUMP CALLING TEAM
+                     *********************/
+                    
                     //ask each player about the face-up card first
-                    for(int i = 0; i < 4 && round.getTrump() == null; i++){
+                    for(int i = 0; i < 4 && currentRound.getTrump() == null; i++){
                         int askPlayerIdx = (dealerIdx + 1 + i) %4; //the player to ask. (start with the player after the dealer, add number of players already asked, mod 4
                         Player player = playersInSeatingOrder.get(askPlayerIdx);
                         
@@ -186,8 +200,8 @@ public class EuchreGame {
                                     throw new PlayerException(player.getName(),"The player caused an exception during play.", t);
                                 }
                             }
-                            round.playerCallsUpCard(player, alone); //update the round with the call-up decision
-                            writeMessage(player.getName() + " calls up the " + faceup.getName() + ".", true);
+                            currentRound.playerCallsUpCard(player, alone); //update the round with the call-up decision
+                            writeMessage(player.getName() + " calls up the " + faceup.name() + ".", true);
                             if(alone){
                                 writeMessage(player.getName() + " decides to play alone.", true);
                             }
@@ -196,19 +210,21 @@ public class EuchreGame {
                             if( i != 1 ){
 	                            Card swapOut = null;
 	                            try{
-	                                swapOut = round.dealer().getAi().swapWithFaceUpCard(faceup.clone()); //ask dealer which card to swap with the kitty
+	                                swapOut = currentRound.dealer().getAi().swapWithFaceUpCard(faceup.clone()); //ask dealer which card to swap with the kitty
 	                            }catch(Throwable t){
 	                                throw new PlayerException(player.getName(),"The player caused an exception during play.", t);
 	                            }
-	                            round.dealerTakesFaceUpCard(swapOut); //update the round with the card swap
-	                            writeMessage(round.dealer().getName() + " picks up the " + faceup.getName() + " and places another card in the kitty", true);
+	                            currentRound.dealerTakesFaceUpCard(swapOut); //update the round with the card swap
+	                            writeMessage(currentRound.dealer().getName() + " picks up the " + faceup.name() + " and places another card in the kitty", true);
                             }
                         }else{
                             writeMessage(player.getName() + " passes.", false);
                         }
                     }
+                    
+                    
                     //if trump is still not decided ask each non-dealer player about making trump
-                    for(int i = 0; i < 3 && round.getTrump() == null; i++){
+                    for(int i = 0; i < 3 && currentRound.getTrump() == null; i++){
                         int askPlayerIdx = (dealerIdx + 1 + i) %4; // the player to ask. (start with the player after the dealer, add number of players already asked, mod 4
                         Player player = playersInSeatingOrder.get(askPlayerIdx);
                         
@@ -229,7 +245,7 @@ public class EuchreGame {
                             }catch(Throwable t){
                                 throw new PlayerException(player.getName(),"The player caused an exception during play.", t);
                             }
-                            round.playerCallsTrump(player,trump, alone); //update the round with the trump call (it validates the suit picked)
+                            currentRound.playerCallsTrump(player,trump, alone); //update the round with the trump call (it validates the suit picked)
 
                             writeMessage(player.getName() + " calls trump to be " + trump.getName() + ".", true);
                             
@@ -242,90 +258,115 @@ public class EuchreGame {
                     }
 
                     //if the trump is STILL null then the dealer must pick a trump.  a.k.a. 'stick the dealer'
-                    if(round.getTrump() == null){
+                    if(currentRound.getTrump() == null){
                     	
                         Suit suit = null;
                         try{
-                            suit = round.dealer().getAi().stickTheDealer(faceup.clone()); //Ask dealer to decide on suit, null and the faceup card's suit are not valid
+                            suit = currentRound.dealer().getAi().stickTheDealer(faceup.clone()); //Ask dealer to decide on suit, null and the faceup card's suit are not valid
                         }catch(Throwable t){
-                            throw new PlayerException(round.dealer().getName(),"The player caused an exception during play.", t);
+                            throw new PlayerException(currentRound.dealer().getName(),"The player caused an exception during play.", t);
                         }
                         //determining trump and playing alone
                         boolean alone = false;
                         try{
-                            alone = round.dealer().getAi().playAlone(); //ask the dealer if they will play alone.
+                            alone = currentRound.dealer().getAi().playAlone(); //ask the dealer if they will play alone.
                         }catch(Throwable t){
-                            throw new PlayerException(round.dealer().getName(),"The player caused an exception during play.", t);
+                            throw new PlayerException(currentRound.dealer().getName(),"The player caused an exception during play.", t);
                         }
-                        round.playerCallsTrump(round.dealer(),suit, alone); //update the round with the trump call (it validates the suit picked)
+                        currentRound.playerCallsTrump(currentRound.dealer(),suit, alone); //update the round with the trump call (it validates the suit picked)
 
-                        writeMessage(round.dealer().getName() + " calls trump to be " + suit.getName() + ".", true);
+                        writeMessage(currentRound.dealer().getName() + " calls trump to be " + suit.getName() + ".", true);
                         
                         if(alone){
-                            writeMessage(round.dealer().getName() + " decides to play alone.", true);
+                            writeMessage(currentRound.dealer().getName() + " decides to play alone.", true);
                         }
 
                     }
 
                     //Trump should now be decided
-                    writeMessage("Trump is: " + round.getTrump().getName(), true);
+                    writeMessage("Trump is: " + currentRound.getTrump().getName(), true);
                     writeMessage("Hands are:", false);
-
+                    writeMessage("-", true);
+                    
                     playersInSeatingOrder.stream().forEach(p -> writeMessage(p.getName() + ":" + p.getHand(), false));
                     
-
-                    ///PLAY THE TRICKS IN THE ROUND///
+                    
+                    
+                    /*********************
+                     * PLAY THE TRICKS IN THE ROUND
+                     *********************/
+                    
                     //each player will continue to play cards until all cards are played. The players are given the current state of each trick as they play, but can ask the game for more pubilc information.
-                    while(!round.isRoundComplete()){
-                        Player player = round.getNextPlayer();
+                    while(!currentRound.isRoundComplete()){
+                        Player player = currentRound.nextPlayer();
                         Card playCard = null;
                         
                         //Ask the next player to play their card into the current trick
                         try{
-                            playCard = player.getAi().playCard(round.getCurrentTrick().clone()); //tell the player to play a card, and give them the trick so far (a copy of it)
+                            playCard = player.getAi().playCard(currentRound.getCurrentTrick().clone()); //tell the player to play a card, and give them the trick so far (a copy of it)
                         }catch(Throwable t){
                             throw new PlayerException(player.getName(),"The player caused an exception during play.", t);
                         }
                         
-                        round.playerPlaysCardToTrick(playCard, player); //update the round with the card played
+                        currentRound.playerPlaysCardToTrick(playCard, player); //update the round with the card played
 
                         //Notify of the play (and possibly the taking of the trick)
-                        writeMessage(player.getName() + " lays the " + playCard.getName(), true);
-                        if(round.getCurrentTrick().isTrickEmpty() || round.isRoundComplete()){  //when the last card is played in a trick, the round clears the trick
-                            writeMessage(round.getTricks().get(round.getTricks().size()-1).getTrickTaker() + " takes the trick.", true);
+                        writeMessage(player.getName() + " lays the " + playCard.name(), true);
+                        if(currentRound.getCurrentTrick().trickEmpty() || currentRound.isRoundComplete()){  //when the last card is played in a trick, the round clears the trick
+                            writeMessage(currentRound.getTricks().get(currentRound.getTricks().size()-1).getTrickTaker() + " takes the trick.", true);
+                            writeMessage("-", true);
                         }
                     }
                     
-                    //ASSIGN POINTS FOR THE ROUND
+                    
+                    /*********************
+                     * ASSIGN POINTS FOR THE ROUND
+                     *********************/
+                    
                     //once all tricks are played, the points counted can be assigned
-                    int points = round.getWinAmount();
-                    Team winners = round.getWinners();
-                    winners.increaseScore(points);
-                    writeMessage(winners.getTeamAndPlayerNames() + " made " + points + "pts from this round", true);
+                    int points = currentRound.getWinAmount();
+                    Team roundWinners = currentRound.getWinners();
+                    roundWinners.increaseScore(points);
+                    
+                    //Announce new scores
+                    writeMessage(roundWinners.getTeamAndPlayerNames() + " made " + points + "pts from this round", true);
                     writeMessage("Current Scores: ",true);
                     teams.stream().forEach(t -> writeMessage(t.getTeamAndPlayerNames() + " " + t.getScore() + "pts ", true));
 
 
-                    //PASS DEALER
+                    
+                    /*********************
+                     * PASS DEALER
+                     *********************/
+                    
                     //The round is complete, increment dealer, and add the next round
-                    dealerIdx++;
-                    dealerIdx = dealerIdx %4;
-                    rounds.add(round);
+                    dealerIdx = ++dealerIdx %4;
+                    completedRounds.add(currentRound);
                 }
+
                 
-                //GAME OVER
+                /*********************
+                 * GAME END
+                 *********************/
+                
                 //declare the winners (winner assigned during loop checkForWinner)
+                writeMessage("", true);
+                writeMessage("", true);
+                writeMessage("--Game Over--", true);
                 writeMessage(winningTeam.getTeamAndPlayerNames() + " wins this game", true);
                 writeMessage("Final Scores: ",true);
                 teams.stream().forEach(t -> writeMessage(t.getTeamAndPlayerNames() + " " + t.getScore() + "pts ", true));
+                writeMessage("", true);
 
             }catch(MissingPlayer mp){
                 //this exception should not have been caused by a player.. so we'll write it out and push it up
                 writeMessage("Error finding player " + mp.getPlayerName() + ": " + mp.getMessage(), true);
                 throw mp;
+                
             }catch(IllegalPlay ip){  //player initiated failure
                 writeMessage("Illegal play caused by " + ip.getPlayerName() + ": " + ip.getMessage(), true);
                 playerErrored(ip.getPlayerName(), ip);
+                
             }catch(PlayerException pe){  //player initiated failure
                 writeMessage("Error caused by " + pe.getPlayerName() + ": " + pe.getMessage(),true);
                 pe.printStackTrace(messenger);
@@ -335,6 +376,7 @@ public class EuchreGame {
         }
     }
 
+    
     /**
      * check the team scores and set a winner if a team has 10 points or more.
      * If there is a winner, it sets winningTeam and therefore ends the game.
@@ -359,51 +401,18 @@ public class EuchreGame {
         }
     }
 
-    /**
-     * Returns the players that won
-     * @return the players that won
-     */
-    public List<Player> getWinningPlayers() throws MissingPlayer{
-        return new ArrayList<Player>(winningTeam.getPlayers());
-    }
+
     
-    /**
-     * Returns the players that lost
-     * @return the players that lost
-     */
-    public List<Player> getLosingPlayers() throws MissingPlayer{
-        return teams.stream().filter(t -> ! t.equals(winningTeam)).findFirst().get().getPlayers();
-    }
-
-
-    /**
-     * Set the printStream to use for this game.
-     * @param ps the printstream to use
-     */
-    public void setPrintStream(PrintStream ps){
-        messenger = ps;
-    }
-
     /**
      * Write a message for everybody to see.
      * Display the message if the verbose setting is at level 2 OR it is at level 1 and the message is 'essential'
      * @param message the message to pass on to everybody
      * @param essentialMessage an indicator if this message should always be displayed or on in verbose mode.
      */
-    public void writeMessage(String message, boolean essentialMessage){
-        if( (verbose == 1 && essentialMessage) 
-        	|| verbose == 2 ){
-                messenger.println(message);
+    private void writeMessage(String message, boolean essentialMessage){
+        if( verbose || essentialMessage) {
+        	messenger.println(message);
         }
-    }
-
-    /**
-     * Method allowing players to speak
-     * @param player the player making the message
-     * @param message the message for the other players
-     */
-    public void playerSpeaks(String playerName, String message){
-        writeMessage(playerName + " says: " + message, false);
     }
 
     /**
@@ -412,8 +421,8 @@ public class EuchreGame {
      * @throws IllegalStateException if a round hasn't started yet.
      */
      protected Round getCurrentRound() throws IllegalStateException{
-         if(round == null){ throw new IllegalStateException("There is no current round to report on.");}
-         return round;
+         if(currentRound == null){ throw new IllegalStateException("There is no current round to report on.");}
+         return currentRound;
      }
 
      /**
@@ -423,4 +432,28 @@ public class EuchreGame {
      protected List<Team> getTeams(){
          return teams;
      }
+
+     /**
+      * Returns the players that won
+      * @return the players that won
+      */
+     public List<Player> getWinningPlayers(){
+         if (winningTeam == null){
+         	throw new IllegalStateException("Game is not yet complete, run playGame() first");
+         }
+         return new ArrayList<Player>(winningTeam.getPlayers());
+     }
+     
+     /**
+      * Returns the players that lost
+      * @return the players that lost
+      */
+     public List<Player> getLosingPlayers(){
+         if (winningTeam == null){
+         	throw new IllegalStateException("Game is not yet complete, run playGame() first");
+         }
+         return teams.stream().filter(t -> ! t.equals(winningTeam)).findFirst().get().getPlayers();
+     }
+     
+     
 }

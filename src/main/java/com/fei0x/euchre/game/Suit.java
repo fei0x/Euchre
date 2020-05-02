@@ -35,7 +35,7 @@ public enum Suit implements Serializable  {
      * @param name the name of the suit
      * @param color the color of the suit
      */
-    Suit(String name, String color){
+    private Suit(String name, String color){
         this.name = name;
         this.color = color;
     }

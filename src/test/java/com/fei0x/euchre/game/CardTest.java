@@ -942,7 +942,7 @@ public class CardTest extends TestCase {
         System.out.println("getName");
         Card instance = new Card(Rank.QUEEN, Suit.SPADES);
         String expResult = "QUEEN of SPADES";
-        String result = instance.getName();
+        String result = instance.name();
         assertEquals(expResult, result);
     }
 
@@ -963,15 +963,15 @@ public class CardTest extends TestCase {
     private void assertCardArray(List<Card> expResult, List<Card> result){
         System.out.println("Expected");
         for(Card card :expResult){
-            System.out.println(card.getName());
+            System.out.println(card.name());
         }
         System.out.println("Result");
         for(Card card :result){
-            System.out.println(card.getName());
+            System.out.println(card.name());
         }
         assertEquals(expResult.size(), result.size());
         for(int i = 0; i < expResult.size(); i++){
-            assertEquals(expResult.get(i).getName(), result.get(i).getName());
+            assertEquals(expResult.get(i).name(), result.get(i).name());
         }
     }
     

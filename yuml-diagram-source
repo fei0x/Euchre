@@ -1,0 +1,47 @@
+// yuml.me
+// ------------------
+
+//Game
+[Card]++-[(E)Suit]
+[Card]++-[(E)Rank]
+[Hand]++-0..5[Card]
+[Trick]-0..3/4>[Play]
+[Player]->[Hand]
+[Player]->[(I)AskGame]
+[Player]<-[AskGameImpl]
+[(I)AskGame]^[AskGameImpl]
+[Player]++-[(A)PlayerAI]
+[(I)AskGame]<-[(A)PlayerAI]
+[EuchreGame]<-[AskGameImpl]
+[Play]<>+-[Player]
+[Play]<>-[Card]
+[EuchreGame]++-*>[Round]
+[EuchreGame]++-2>[Team]
+[EuchreGame]++-4>[Player]
+//[Round]-4>[Player]
+//[Round]-2>[Team]
+[Round]-0..5>[Trick]
+[Team]-2>[Player]
+
+//Player AI
+[(A)PlayerAI]^[AggressivePlayer]
+[(A)PlayerAI]^[RandomPlayer]
+[(A)PlayerAI]^[HumanPlayer]
+
+//Run
+[RunEuchre]-0..1>[RoundRobin]
+[RunEuchre]->[EuchreGame]
+[RoundRobin]-*>[EuchreGame]
+
+//Distributed Play
+[EuchreGame]->[(A)PlayerAI]
+[(A)PlayerAI]^[PlayerAIProxy {bg:powderblue}]
+[PlayerAIProxy {bg:powderblue}]->[(I)EuchreClient {bg:peachpuff}]
+[(I)EuchreClient {bg:peachpuff}]^[EuchreClientImpl {bg:peachpuff}]
+[EuchreClientImpl {bg:peachpuff}]->[ConcretePlayerAI (on client) {bg:peachpuff}]
+[ConcretePlayerAI (on client) {bg:peachpuff}]->[(I)AskGame (on client) {bg:peachpuff}]
+[(I)AskGame (on client) {bg:peachpuff}]^[AskGameProxy {bg:peachpuff}]
+[AskGameProxy {bg:peachpuff}]->[(I)EuchreServer {bg:powderblue}]
+[(I)EuchreServer {bg:powderblue}]^[EuchreServerImpl {bg:powderblue}]
+[EuchreServerImpl {bg:powderblue}]->[(I)AskGame]
+

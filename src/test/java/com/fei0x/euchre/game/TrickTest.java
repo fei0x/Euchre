@@ -50,7 +50,7 @@ public class TrickTest extends TestCase {
         Trick instance = new Trick(Suit.CLUBS, false);
         instance.addPlay(player, card);
         assertEquals(instance.getPlays().size(), 1);
-        assertEquals(instance.getPlays().get(0).getCard().getName(), card.getName());
+        assertEquals(instance.getPlays().get(0).getCard().name(), card.name());
         assertEquals(instance.getPlays().get(0).getPlayer(), player);
     }
 
@@ -73,9 +73,9 @@ public class TrickTest extends TestCase {
         Card card4 = new Card(Rank.ACE, Suit.CLUBS);
         instance.addPlay(player4, card4);
         assertEquals(instance.getPlays().size(), 4);
-        assertEquals(instance.getPlays().get(0).getCard().getName(), card1.getName());
+        assertEquals(instance.getPlays().get(0).getCard().name(), card1.name());
         assertEquals(instance.getPlays().get(1).getPlayer(), player2);
-        assertEquals(instance.getPlays().get(2).getCard().getName(), card3.getName());
+        assertEquals(instance.getPlays().get(2).getCard().name(), card3.name());
         assertEquals(instance.getPlays().get(3).getPlayer(), player4);
     }
 
@@ -98,9 +98,9 @@ public class TrickTest extends TestCase {
         Card card4 = new Card(Rank.ACE, Suit.CLUBS);
         instance.addPlay(player4, card4);
         assertEquals(instance.getPlays().size(), 3);
-        assertEquals(instance.getPlays().get(0).getCard().getName(), card1.getName());
+        assertEquals(instance.getPlays().get(0).getCard().name(), card1.name());
         assertEquals(instance.getPlays().get(1).getPlayer(), player2);
-        assertEquals(instance.getPlays().get(2).getCard().getName(), card3.getName());
+        assertEquals(instance.getPlays().get(2).getCard().name(), card3.name());
         try{
             instance.getPlays().get(3);
             assertTrue(false);
@@ -114,7 +114,7 @@ public class TrickTest extends TestCase {
         System.out.println("isTrickEmpty");
         Trick instance = new Trick(Suit.CLUBS, true);
         boolean expResult = true;
-        boolean result = instance.isTrickEmpty();
+        boolean result = instance.trickEmpty();
         assertEquals(expResult, result);
     }
 
@@ -128,7 +128,7 @@ public class TrickTest extends TestCase {
         Card card = new Card(Rank.TEN, Suit.CLUBS);
         instance.addPlay(player, card);
         boolean expResult = false;
-        boolean result = instance.isTrickEmpty();
+        boolean result = instance.trickEmpty();
         assertEquals(expResult, result);
     }
 
@@ -144,8 +144,8 @@ public class TrickTest extends TestCase {
         String player2 = "player2";
         Card card2 = new Card(Rank.ACE, Suit.CLUBS);
         instance.addPlay(player2, card2);
-        Play result = instance.getLedPlay();
-        assertEquals(result.getCard().getName(), card.getName());
+        Play result = instance.ledPlay();
+        assertEquals(result.getCard().name(), card.name());
         assertEquals(result.getPlayer(), player);
     }
 
@@ -156,7 +156,7 @@ public class TrickTest extends TestCase {
         System.out.println("getLedPlay2");
         Trick instance = new Trick(Suit.CLUBS, false);
         try{
-            instance.getLedPlay();
+            instance.ledPlay();
             assertTrue(false);
         }catch(Exception e){
 
@@ -175,8 +175,8 @@ public class TrickTest extends TestCase {
         String player2 = "player2";
         Card card2 = new Card(Rank.ACE, Suit.CLUBS);
         instance.addPlay(player2, card2);
-        Card result = instance.getLedCard();
-        assertEquals(result.getName(), card.getName());
+        Card result = instance.ledCard();
+        assertEquals(result.name(), card.name());
     }
 
     /**
@@ -186,7 +186,7 @@ public class TrickTest extends TestCase {
         System.out.println("getLedCard2");
         Trick instance = new Trick(Suit.CLUBS, false);
         try{
-            instance.getLedCard();
+            instance.ledCard();
             assertTrue(false);
         }catch(Exception e){
 
@@ -206,7 +206,7 @@ public class TrickTest extends TestCase {
         String player2 = "player2";
         Card card2 = new Card(Rank.ACE, Suit.SPADES);
         instance.addPlay(player2, card2);
-        Suit result = instance.getLedSuit(false);
+        Suit result = instance.ledSuit(false);
         assertEquals(result, card.getSuit(Suit.SPADES));
     }
 
@@ -217,7 +217,7 @@ public class TrickTest extends TestCase {
         System.out.println("getLedSuit2");
         Trick instance = new Trick(Suit.SPADES, false);
         try{
-            instance.getLedSuit(true);
+            instance.ledSuit(true);
             assertTrue(false);
         }catch(Exception e){
 
@@ -237,7 +237,7 @@ public class TrickTest extends TestCase {
         String player2 = "player2";
         Card card2 = new Card(Rank.ACE, Suit.SPADES);
         instance.addPlay(player2, card2);
-        Suit result = instance.getLedSuit(true);
+        Suit result = instance.ledSuit(true);
         assertEquals(result, Suit.SPADES);
     }
 
@@ -253,7 +253,7 @@ public class TrickTest extends TestCase {
         String player2 = "player2";
         Card card2 = new Card(Rank.ACE, Suit.SPADES);
         instance.addPlay(player2, card2);
-        Suit result = instance.getLedSuit(true);
+        Suit result = instance.ledSuit(true);
         assertEquals(result, Suit.SPADES);
     }
 
@@ -276,9 +276,9 @@ public class TrickTest extends TestCase {
         Card card4 = new Card(Rank.ACE, Suit.CLUBS);
         instance.addPlay(player4, card4);
         assertEquals(instance.getPlays().size(), 4);
-        assertEquals(instance.getPlays().get(0).getCard().getName(), card1.getName());
+        assertEquals(instance.getPlays().get(0).getCard().name(), card1.name());
         assertEquals(instance.getPlays().get(1).getPlayer(), player2);
-        assertEquals(instance.getPlays().get(2).getCard().getName(), card3.getName());
+        assertEquals(instance.getPlays().get(2).getCard().name(), card3.name());
         assertEquals(instance.getPlays().get(3).getPlayer(), player4);
     }
 
@@ -496,7 +496,7 @@ public class TrickTest extends TestCase {
         System.out.println("isTrickComplete");
         Trick instance = new Trick(Suit.CLUBS, false);
         boolean expResult = false;
-        boolean result = instance.isTrickComplete();
+        boolean result = instance.trickComplete();
         assertEquals(expResult, result);
     }
 
@@ -519,7 +519,7 @@ public class TrickTest extends TestCase {
         Card card4 = new Card(Rank.ACE, Suit.DIAMONDS);
         instance.addPlay(player4, card4);
         boolean expResult = true;
-        boolean result = instance.isTrickComplete();
+        boolean result = instance.trickComplete();
         assertEquals(expResult, result);
     }
 
@@ -539,7 +539,7 @@ public class TrickTest extends TestCase {
         Card card3 = new Card(Rank.JACK, Suit.DIAMONDS);
         instance.addPlay(player3, card3);
         boolean expResult = true;
-        boolean result = instance.isTrickComplete();
+        boolean result = instance.trickComplete();
         assertEquals(expResult, result);
     }
 

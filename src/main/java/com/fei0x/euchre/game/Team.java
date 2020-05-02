@@ -39,7 +39,7 @@ public class Team {
      * @param playerOneName the name of the first player
      * @param playerTwoName the name of the second player
      */
-    public Team(String teamName, Player playerOneName, Player playerTwoName){
+    protected Team(String teamName, Player playerOneName, Player playerTwoName){
     	this.name = teamName;
         players.add(playerOneName);
         players.add(playerTwoName);
@@ -49,7 +49,7 @@ public class Team {
      * Get the name of the team
      * @return
      */
-    public String getName(){
+    protected String getName(){
         return name;
     }
     
@@ -57,7 +57,7 @@ public class Team {
      * Get both players
      * @return
      */
-    public List<Player> getPlayers(){
+    protected List<Player> getPlayers(){
         return players;
     }
     
@@ -65,7 +65,7 @@ public class Team {
      * Get both player names
      * @return
      */
-    public List<String> playerNames(){
+    protected List<String> playerNames(){
         return players.stream().map(p -> p.getName()).collect(Collectors.toList());
     }
 
@@ -73,7 +73,7 @@ public class Team {
      * Returns the names of both players together joined with an "&"
      * @return the names of both players together
      */
-    public String getTeamAndPlayerNames(){
+    protected String getTeamAndPlayerNames(){
         return "Team " + name + ": " + players.get(0).getName() + " & " + players.get(1).getName();
     }
 
@@ -81,7 +81,7 @@ public class Team {
      * Returns the team's score
      * @return the team's score
      */
-    public int getScore(){
+    protected int getScore(){
         return score;
     }
 
@@ -105,7 +105,7 @@ public class Team {
      * @param player the player to check for
      * @return true if the player is on this team
      */
-    public boolean hasMember(String playerName){
+    protected boolean hasMember(String playerName){
     	return players.stream().anyMatch(p -> p.getName().equals(playerName));
     }
 
@@ -114,7 +114,7 @@ public class Team {
      * @param player the player to check for
      * @return true if the player is on this team
      */
-    public boolean hasMember(Player player){
+    protected boolean hasMember(Player player){
     	return players.stream().anyMatch(p -> p.equals(player));
     }
     
@@ -125,7 +125,7 @@ public class Team {
      * @return the player's teammate
      * @throws MissingPlayer if the player could not be found.
      */
-    public Player getTeammate(Player player) throws MissingPlayer{
+    protected Player getTeammate(Player player) throws MissingPlayer{
     	return players.stream()
     			.filter(p -> !p.equals(player))
     			.reduce((a, b) -> {throw new MissingPlayer("Player " + player + " could not be found on this team."); })

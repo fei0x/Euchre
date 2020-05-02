@@ -6,7 +6,6 @@
 package com.fei0x.euchre.game;
 
 import com.fei0x.euchre.game.Team;
-import com.fei0x.euchre.player_ai.PlayerAI;
 
 import junit.framework.Test;
 import junit.framework.TestCase;

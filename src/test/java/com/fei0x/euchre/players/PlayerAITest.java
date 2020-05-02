@@ -10,9 +10,9 @@ import java.util.List;
 import com.fei0x.euchre.exceptions.MissingPlayer;
 import com.fei0x.euchre.game.AskGame;
 import com.fei0x.euchre.game.Card;
+import com.fei0x.euchre.game.PlayerAI;
 import com.fei0x.euchre.game.Suit;
 import com.fei0x.euchre.game.Trick;
-import com.fei0x.euchre.player_ai.PlayerAI;
 
 import junit.framework.TestCase;
 

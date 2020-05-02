@@ -37,7 +37,7 @@ public class Card implements Cloneable, Serializable {
      * @param r  Rank of the new card
      * @param s  Suit of the new card
      */
-    public Card(Rank r, Suit s){
+    protected Card(Rank r, Suit s){
         rank = r;
         suit = s;
     }
@@ -175,9 +175,8 @@ public class Card implements Cloneable, Serializable {
         || (this.higherThan(that) && this.sameSuit(that, trump) && !that.isRightBower(trump) && !that.isLeftBower(trump))     //when both cards are both trump or not trump and neither are bowers, then it comes to rank
         ;                                                    
     }   
+
     
-
-
     /**
      * Given a set of cards and trump, return the top cards. (a hand with trump will return the highest trump) (a hand without trump will return all the cards of the highest rank). assumes that there are no duplicate cards.
      * @param cards the set of cards to look through (unexpected behaviour if the cards contain duplicates, though it should still work.)
@@ -318,14 +317,14 @@ public class Card implements Cloneable, Serializable {
      */
     @Override
     public String toString(){
-        return getName();
+        return name();
     }
 
     /**
      * The full title of this card
      * @return readable title for this card.
      */
-    public String getName(){
+    public String name(){
         return rank + " of " + suit;
     }
 

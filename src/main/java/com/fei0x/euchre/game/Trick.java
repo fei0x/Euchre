@@ -65,6 +65,26 @@ public class Trick implements Cloneable, Serializable {
     }
     
 
+    /**
+     * Returns the winner of the trick. If the trick is empty
+     * then this function throws an IllegalStateException. Check isTrickComplete to see if the trick is empty.
+     * @return
+     */
+    public String getTrickTaker() throws IllegalStateException {
+        if(trickTaker == null){
+            throw new IllegalStateException("The trick is not complete. There is no trick taker yet.");
+        }
+        return trickTaker;
+    }
+
+
+    /**
+     * returns true if this trick is in a round where the play is alone (in which case there would be 3 cards instead of 4)
+     * @return true if this trick is in a round where the play is alone (in which case there would be 3 cards instead of 4)
+     */
+    public boolean isAlonePlay(){
+        return alonePlay;
+    }
     
     
     /**
@@ -72,7 +92,7 @@ public class Trick implements Cloneable, Serializable {
      * @param trump the trump to be applied to the trick.
      * @param alonePlay is this trick happening in a play alone round (should only have 3 cards instead of 4).
      */
-    public Trick(Suit trump, boolean alonePlay){
+    protected Trick(Suit trump, boolean alonePlay){
         this.trump = trump;
         this.alonePlay = alonePlay;
     }
@@ -83,12 +103,12 @@ public class Trick implements Cloneable, Serializable {
      * Cloning the card as it comes into ensure it's not one a player ai has reference to.
      * @param nextPlay the next play to add.
      */
-    public void addPlay(String player, Card card){
-        if(isTrickComplete()){ return; } //ignore any cards trying to be added to the trick after
+    protected void addPlay(String player, Card card){
+        if(trickComplete()){ return; } //ignore any cards trying to be added to the trick after
         
         plays.add(new Play(player, card.clone()));
         
-        if(isTrickComplete()){
+        if(trickComplete()){
             trickTaker = determineWinningPlay().getPlayer();
         }
     }
@@ -98,7 +118,7 @@ public class Trick implements Cloneable, Serializable {
      * Returns if the trick is empty or not
      * @return true if the trick is empty
      */
-    public boolean isTrickEmpty(){
+    public boolean trickEmpty(){
         return plays.isEmpty();
     }
 
@@ -108,8 +128,8 @@ public class Trick implements Cloneable, Serializable {
      * @return the first play of the trick
      * @throws IllegalStateException if the trick is empty (call isTrickEmpty to check)
      */
-    public Play getLedPlay() throws IllegalStateException {
-        if(isTrickEmpty()){
+    public Play ledPlay() throws IllegalStateException {
+        if(trickEmpty()){
             throw new IllegalStateException("The trick has not started there is no play led yet.");
         }
         return plays.get(0);
@@ -120,8 +140,8 @@ public class Trick implements Cloneable, Serializable {
      * @return the first play of the trick
      * @throws IllegalStateException if the trick is empty (call isTrickEmpty to check)
      */
-    public Card getLedCard() throws IllegalStateException {
-        return getLedPlay().getCard();
+    public Card ledCard() throws IllegalStateException {
+        return ledPlay().getCard();
     }
 
     /**
@@ -130,11 +150,11 @@ public class Trick implements Cloneable, Serializable {
      * @return the suit of the led card.
      * @throws IllegalStateException if the trick is empty (call isTrickEmpty to check)
      */
-    public Suit getLedSuit(boolean considerTrump) throws IllegalStateException {
+    public Suit ledSuit(boolean considerTrump) throws IllegalStateException {
         if(considerTrump){
-            return getLedCard().getSuit(trump);
+            return ledCard().getSuit(trump);
         }else{
-            return getLedCard().getSuit(null);
+            return ledCard().getSuit(null);
         }
     }
 
@@ -158,22 +178,10 @@ public class Trick implements Cloneable, Serializable {
     }
 
     /**
-     * Returns the winner of the trick. If the trick is empty
-     * then this function throws an IllegalStateException. Check isTrickComplete to see if the trick is empty.
-     * @return
-     */
-    public String getTrickTaker() throws IllegalStateException {
-        if(trickTaker == null){
-            throw new IllegalStateException("The trick is not complete. There is no trick taker yet.");
-        }
-        return trickTaker;
-    }
-
-    /**
      * Returns true if the trick is complete (aka the number of plays = 4)
      * @return true if the trick is complete.
      */
-    public boolean isTrickComplete(){
+    public boolean trickComplete(){
         if((!alonePlay && plays.size() == 4)
                 || (alonePlay && plays.size() == 3)){
             return true;

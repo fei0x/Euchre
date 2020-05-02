@@ -3,9 +3,7 @@
  * and open the template in the editor.
  */
 
-package com.fei0x.euchre.player_ai;
-
-import com.fei0x.euchre.game.*;
+package com.fei0x.euchre.game;
 
 /**
  * This abstract class outlines all of the required functionality a contender must fill out to implement a player

@@ -35,7 +35,7 @@ public class Hand implements Cloneable, Serializable {
      * @param playerName the name of the player
      * @param cards the hand for the player
      */
-    public Hand(List<Card> cards) {
+    protected Hand(List<Card> cards) {
         this.cards = cards;
     }
 
@@ -50,7 +50,7 @@ public class Hand implements Cloneable, Serializable {
     /**
      * removes all cards from the hand
      */
-    public void clear(){
+    protected void clear(){
     	cards.clear();
     }
 
@@ -69,35 +69,27 @@ public class Hand implements Cloneable, Serializable {
      * @return the card being removed from the hand. (should use this copy of the hand to add to the trick)
      * @throws IllegalPlay throws an IllegalPlay exception if this player does not have this card to pull
      */
-    public Card pullCard(Card topull) throws IllegalPlay {
+    protected Card pullCard(Card topull) throws IllegalPlay {
         boolean found = cards.removeIf(c -> c.equals(topull));       
-        if (found == false) throw new IllegalPlay("", "The card " + topull.getName() + " is not in player's hand to pull/play.");
+        if (found == false) throw new IllegalPlay("", "The card " + topull.name() + " is not in player's hand to pull/play.");
         else return topull.clone(); //extra safety that we don't use the card the player has a reference to.  
     }
 
 
     /**
-     * Removes a card from the player's hand (using the pullCard function) and then replaces it with a new card (the face-up card from the kitty)
+     * Removes a card from the player's hand (using the pullCard function) and then replaces it with a new card (the only use case is currently the face-up card from the kitty)
      * @param toAdd the card to add
-     * @param topull the intended card to pull from the hand ( a copy of it, uses equals to check equivalancy)
+     * @param topull the intended card to pull from the hand ( a copy of it, uses equals to check equivalence)
      * @return  the card being removed from the hand. (should use this copy of the hand to add back to the kitty)
      * @throws IllegalPlay throws an IllegalPlay exception if this player does not have this card to pull (or if the card to add was already in the player's hand)
      */
-    public Card swapWithFaceUpCard(Card toAdd, Card topull) throws IllegalPlay{
+    protected Card swapCard(Card toAdd, Card topull) throws IllegalPlay{
         if (hasCard(toAdd)){
-            throw new IllegalPlay("", "The card " + toAdd.getName() + " which claims to be from the kitty and is being swapped in-hand is already in the player's hand");
-        }else{  //note: pullcard validates that the player has the card to pull.
+            throw new IllegalPlay("", "The card " + toAdd.name() + " which claims to be from the kitty and is being swapped in-hand is already in the player's hand");
+        }else{  //note: pull card validates that the player has the card to pull.
             cards.add(toAdd);
             return pullCard(topull);
         }
-    }
-
-    /**
-     * Return the cards in this hand
-     * @return the cards in the hand
-     */
-    public List<Card> cards(){
-        return cards;
     }
 
 
@@ -113,18 +105,18 @@ public class Hand implements Cloneable, Serializable {
 
     /**
      * Writes the hand to a string
-     * @return
+     * @return a string of each card in the hand
      */
     public String toString(){
     	return cards.stream().map(c -> c.toString()).collect(Collectors.joining(", "));
     }
 
     /**
-     * Makes a copy of the playerhand, so that players who get their hands on player hands, will actually get their hands on copys. that way they can't cheat!!
-     * @return a COPY of this player's hand.
+     * Makes a copy of the hand, so that players who get access to other player's hands, will actually get copies. that way they can't cheat!!
+     * @return a deep COPY of this hand.
      */
     @Override
-    public Hand clone(){
+    protected Hand clone(){
         List<Card> clonecards = cards.stream().map(c -> c.clone()).collect(Collectors.toList());
         return new Hand(clonecards);
     }

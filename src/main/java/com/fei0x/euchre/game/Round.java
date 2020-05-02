@@ -50,6 +50,7 @@ public class Round {
      */
     private List<Player> orderedPlayers = new ArrayList<Player>();
 
+    
     /****************************
      * Deciding Trump and Which Team Calls It
      ****************************/
@@ -123,7 +124,7 @@ public class Round {
      * @param teams the two teams
      * @throws IllegalArgumentException if the playerOrder and teams are not in alignment.
      */
-    public Round(List<Player> playerOrder, List<Team> teams) throws IllegalArgumentException{
+    protected Round(List<Player> playerOrder, List<Team> teams) throws IllegalArgumentException{
 
         validateTeams(playerOrder,teams);
         this.teams = teams;
@@ -217,7 +218,7 @@ public class Round {
      * Constructs a proper Euchre deck of 24 cards 9-A in all four suits
      * @return the Euchre deck.
      */
-    public static ArrayList<Card> makeDeck(){
+    protected static ArrayList<Card> makeDeck(){
         ArrayList<Card> newdeck = new ArrayList<Card>();
         for(Suit suit : Suit.values()){
             for(Rank rank : Rank.values()){
@@ -231,7 +232,7 @@ public class Round {
      * shuffles the order of the cards passed. In fact shuffles them twice just to be sure.
      * @param cards the cards to shuffle
      */
-    public static void shuffleCards(List<Card> cards){
+    protected static void shuffleCards(List<Card> cards){
         Collections.shuffle(cards);
         Collections.shuffle(cards); //second time just to be sure ;P (if '0 is never rolled' the top card wont change...)
     }
@@ -241,7 +242,7 @@ public class Round {
      * returns the dealer for this round
      * @return the dealer's name
      */
-    public Player dealer(){
+    protected Player dealer(){
         return orderedPlayers.get(0);
     }
 
@@ -249,17 +250,17 @@ public class Round {
      * Returns the player who will play/has played first this round. If going alone has not been decided, it will be the player after the dealer.
      * @return the player who will play/has played first this round. If going alone has not been decided, it will be the player after the dealer.
      */
-    public Player getLeadPlayer(){
+    protected Player leadPlayer(){
         if(!tricks.isEmpty()){ //the first trick is already over... go check who played it.
-            String playerName = tricks.get(0).getLedPlay().getPlayer();
+            String playerName = tricks.get(0).ledPlay().getPlayer();
             return orderedPlayers.stream().filter(p -> p.getName().equalsIgnoreCase(playerName)).findFirst().get();
         }else if(currentTrick != null){
             if(!currentTrick.getPlays().isEmpty()){ //the first play has already played... go check who played it.
-            	String playerName = currentTrick.getLedPlay().getPlayer();
+            	String playerName = currentTrick.ledPlay().getPlayer();
                 return orderedPlayers.stream().filter(p -> p.getName().equalsIgnoreCase(playerName)).findFirst().get();
             }
             //if the trick exists but the player hasn't played yet, getNextPlayer will point to the lead player because of (prepareRoundAndFirstTrick())
-            return getNextPlayer();
+            return nextPlayer();
         }else{
             //it should be the player after the dealer.. since playing alone would not yet have been decided...
             return orderedPlayers.get(1);
@@ -270,7 +271,7 @@ public class Round {
      * returns the team who called trump this round
      * @return the team who called trump this round
      */
-    public Team teamWhoCalledTrump(){
+    protected Team teamWhoCalledTrump(){
     	if(trumpPlayer == null){
     		throw new IllegalStateException("No player has called trump yet this round.");
     	}
@@ -281,7 +282,7 @@ public class Round {
      * returns the team who is playing for a Euchre
      * @return the team who is playing for a Euchre
      */
-    public Team opposingTrumpTeam(){
+    protected Team opposingTrumpTeam(){
     	if(trumpPlayer == null){
     		throw new IllegalStateException("No player has called trump yet this round.");
     	}
@@ -294,7 +295,7 @@ public class Round {
      * @return the player's teammate
      * @throws MissingPlayer if the player could not be found.
      */
-    public Player teammate(Player player) throws MissingPlayer{
+    protected Player teammate(Player player) throws MissingPlayer{
     	int playerIdx = orderedPlayers.indexOf(player);
     	if (playerIdx < 0){
     		throw new MissingPlayer(player.getName(), "Player " + player.getName() + " could not be found on either team");
@@ -312,7 +313,7 @@ public class Round {
      * @throws MissingPlayer thrown if the supplied player could not be found
      * @throws IllegalPlay thrown if the player tries to call a suit that they have no cards for
      */
-    public void playerCallsUpCard(Player player, boolean playingAlone) throws IllegalStateException, MissingPlayer, IllegalPlay{
+    protected void playerCallsUpCard(Player player, boolean playingAlone) throws IllegalStateException, MissingPlayer, IllegalPlay{
     	validateTrumpCall(player,faceUpCardCopy.getSuit(null),playingAlone);
     	
         if(teammate(player).equals(dealer())){ //forced to play alone if your partner is the dealer.
@@ -332,7 +333,7 @@ public class Round {
      * @throws MissingPlayer thrown if the supplied player could not be found
      * @throws IllegalPlay thrown if the player tries to call a suit that they have no cards for
      */
-    public void playerCallsTrump(Player player, Suit trumpSuit, boolean playingAlone) throws IllegalStateException, MissingPlayer, IllegalPlay{
+    protected void playerCallsTrump(Player player, Suit trumpSuit, boolean playingAlone) throws IllegalStateException, MissingPlayer, IllegalPlay{
     	validateTrumpCall(player,trumpSuit,playingAlone);
     	
         if(trumpSuit == faceUpCardCopy.getSuit(null)){
@@ -385,12 +386,12 @@ public class Round {
      * Denotes the dealer placing the face-up card in hand and putting back another card.
      * @param cardToReturn the card to give back to the kitty face down.
      */
-    public void dealerTakesFaceUpCard(Card cardToReturn) throws IllegalPlay{
+    protected void dealerTakesFaceUpCard(Card cardToReturn) throws IllegalPlay{
         Card faceupCard = kitty.remove(0);
         
         Card kittyReplacement;
         try{
-        	kittyReplacement = dealer().getHand().swapWithFaceUpCard(faceupCard, cardToReturn);  //this function validates both that the player has the card to return and that the player is picking up the correct card.
+        	kittyReplacement = dealer().getHand().swapCard(faceupCard, cardToReturn);  //this function validates both that the player has the card to return and that the player is picking up the correct card.
         }catch(IllegalPlay ex){
         	throw new IllegalPlay(dealer().getName(), "Dealer " + dealer().getName() + " could not swap with face-up card.", ex );
         } 
@@ -403,7 +404,7 @@ public class Round {
      * @param name of the player to check for
      * @return the player is playing in this round.
      */
-    public Player findPlayer(String playerName){
+    protected Player findPlayer(String playerName){
     	Player player = orderedPlayers.stream().filter(p -> p.getName().equals(playerName)).findFirst().orElse(null);
     	if(player == null){
     		throw new MissingPlayer(playerName, "Player: " + playerName + " is not playing in this round. Could not find player");
@@ -426,7 +427,7 @@ public class Round {
      * Returns the player who must play next
      * @return the next player up
      */
-    public Player getNextPlayer(){
+    protected Player nextPlayer(){
         return orderedPlayers.get(nextPlayerIndex);
     }
 
@@ -436,7 +437,7 @@ public class Round {
      * accounts for 'playing alone' and moving along in order.
      */
     private void setNextPlayer() throws MissingPlayer {
-        if(currentTrick.isTrickEmpty() && tricks.size() != 0){ //we're at the beginning of a trick that is not the first trick
+        if(currentTrick.trickEmpty() && tricks.size() != 0){ //we're at the beginning of a trick that is not the first trick
         	
             //set the next player to the last trick taker
             String nextPlayerName = tricks.get(tricks.size() -1).getTrickTaker();
@@ -452,7 +453,7 @@ public class Round {
             nextPlayerIndex = nextPlayerIndex%4;
             
             //check if the player set is supposed to be skipped because of playing alone.
-            if(playingAlone && getNextPlayer().equals(trumpPlayerTeammate) ){
+            if(playingAlone && nextPlayer().equals(trumpPlayerTeammate) ){
                 setNextPlayer();  //do this once again.
             }
         }
@@ -465,7 +466,7 @@ public class Round {
      * @throws IllegalStateException if trump has not been selected yet, or there have already been 5 tricks played, or a player plays a card they do not have then this exception is thrown.
      * @throws MissingPlayer thrown if the supplied player could not be found
      */
-    public void playerPlaysCardToTrick(Card card, Player player) throws IllegalStateException, MissingPlayer, IllegalPlay{
+    protected void playerPlaysCardToTrick(Card card, Player player) throws IllegalStateException, MissingPlayer, IllegalPlay{
         if(trump == null){  //validate this is not called too early
             throw new IllegalStateException("Trump has not been decided yet, player cannot play a card.");
         }
@@ -475,14 +476,14 @@ public class Round {
         if(orderedPlayers.indexOf(player) < 0){  ///validate that player is in the round
             throw new MissingPlayer(player.getName(), "Player: " + player.getName() + " is not playing in this round.");
         }
-        if(!getNextPlayer().equals(player)){  //validate that it is this player's turn.
+        if(!nextPlayer().equals(player)){  //validate that it is this player's turn.
             throw new IllegalStateException("It is not " + player.getName() + "'s turn to play.");
         }
-        if(!currentTrick.isTrickEmpty()){
+        if(!currentTrick.trickEmpty()){
             //check to make sure the play is legal (they are following suit) (validating the card in hand is done below)
-            List<Card> tempHand = Card.findLegalCards(player.getHand().getCards(), currentTrick.getLedCard(), trump);
+            List<Card> tempHand = Card.findLegalCards(player.getHand().getCards(), currentTrick.ledCard(), trump);
             if(!tempHand.contains(card)){
-                throw new IllegalPlay(player.getName(), "The player played an illegal card from their hand. They played: " + card.getName() + ". The legal cards are: " + tempHand.toString());
+                throw new IllegalPlay(player.getName(), "The player played an illegal card from their hand. They played: " + card.name() + ". The legal cards are: " + tempHand.toString());
             }
         }
 
@@ -496,7 +497,7 @@ public class Round {
 
 
         //if it's the last card in the trick, add to tricks.
-        if(currentTrick.isTrickComplete()){
+        if(currentTrick.trickComplete()){
             tricks.add(currentTrick);
 
             if(isRoundComplete()){  //if its the last trick calculate the winner
@@ -514,12 +515,12 @@ public class Round {
      * Returns true if there are 5 complete tricks.
      * @return true if there are 5 complete tricks.
      */
-    public boolean isRoundComplete(){
+    protected boolean isRoundComplete(){
         if(tricks.size() != 5){
             return false;
         }
         for(Trick trick : tricks){
-            if(!trick.isTrickComplete()){
+            if(!trick.trickComplete()){
                 return false;
             }
         }
@@ -567,7 +568,7 @@ public class Round {
      * get the currentTrick in the round
      * @return the currentTrick. or null if called too early.
      */
-    public Trick getCurrentTrick() {
+    protected Trick getCurrentTrick() {
         return currentTrick;
     }
 
@@ -575,7 +576,7 @@ public class Round {
      * returns the card that was face up to the table whether picked up or not.
      * @return the card that was face up to the table whether picked up or not.
      */
-    public Card getFaceUpCardCopy() {
+    protected Card getFaceUpCardCopy() {
         return faceUpCardCopy;
     }
 
@@ -583,7 +584,7 @@ public class Round {
      * returns if the player who called trump decided to play alone or not
      * @return if the player who called trump decided to play alone or not
      */
-    public boolean isPlayingAlone() {
+    protected boolean isPlayingAlone() {
         return playingAlone;
     }
 
@@ -591,7 +592,7 @@ public class Round {
      * Returns all the tricks that have been completed in the round so far
      * @return all the tricks that have been completed in the round so far
      */
-    public List<Trick> getTricks() {
+    protected List<Trick> getTricks() {
         return tricks;
     }
 
@@ -599,7 +600,7 @@ public class Round {
      * Get the trump for the current round. Returns null if the trump is not yet determined
      * @return the trump for the round.
      */
-    public Suit getTrump() {
+    protected Suit getTrump() {
         return trump;
     }
 
@@ -607,7 +608,7 @@ public class Round {
      * Returns the player who called trump
      * @return the player who called trump
      */
-    public Player getTrumpPlayer() {
+    protected Player getTrumpPlayer() {
         return trumpPlayer;
     }
 
@@ -615,7 +616,7 @@ public class Round {
      * get the amount of points which the team who scored earned.
      * @return the amount of points earned this round by the winning team
      */
-    public int getWinAmount() {
+    protected int getWinAmount() {
         return winAmount;
     }
 
@@ -623,7 +624,7 @@ public class Round {
      * get the team which won the round
      * @return the team which won the round
      */
-    public Team getWinners() {
+    protected Team getWinners() {
         return winners;
     }
 

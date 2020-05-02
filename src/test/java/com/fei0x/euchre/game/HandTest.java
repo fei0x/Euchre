@@ -104,7 +104,7 @@ public class HandTest extends TestCase {
         Hand instance = new Hand(cards);
         Card expResult = testPull;
         Card result = instance.pullCard(topull);
-        assertEquals(expResult.getName(), result.getName());
+        assertEquals(expResult.name(), result.name());
     }
 
     /**
@@ -139,7 +139,7 @@ public class HandTest extends TestCase {
         cards.add(resultCard);
         Hand instance = new Hand(cards);
         Card expResult = resultCard;
-        Card result = instance.swapWithFaceUpCard(toAdd, topull);
+        Card result = instance.swapCard(toAdd, topull);
         System.out.println("result: " + result);
         assertEquals(expResult, result);
     }
@@ -156,7 +156,7 @@ public class HandTest extends TestCase {
         cards.add(new Card(Rank.QUEEN, Suit.CLUBS));
         Hand instance = new Hand(cards);
         try{
-            instance.swapWithFaceUpCard(toAdd, topull);
+            instance.swapCard(toAdd, topull);
             assertTrue(false);
         }catch(IllegalPlay ip){
         }
@@ -173,7 +173,7 @@ public class HandTest extends TestCase {
         cards.add(new Card(Rank.KING, Suit.CLUBS));
         Hand instance = new Hand(cards);
         List<Card> expResult = cards;
-        List<Card> result = instance.cards();
+        List<Card> result = instance.getCards();
         assertCardArray(expResult, result);
     }
 
@@ -284,15 +284,15 @@ public class HandTest extends TestCase {
     private void assertCardArray(List<Card> expResult, List<Card> result){
         System.out.println("Expected");
         for(Card card :expResult){
-            System.out.println(card.getName());
+            System.out.println(card.name());
         }
         System.out.println("Result");
         for(Card card :result){
-            System.out.println(card.getName());
+            System.out.println(card.name());
         }
         assertEquals(expResult.size(), result.size());
         for(int i = 0; i < expResult.size(); i++){
-            assertEquals(expResult.get(i).getName(), result.get(i).getName());
+            assertEquals(expResult.get(i).name(), result.get(i).name());
         }
     }
 }

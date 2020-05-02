@@ -3,56 +3,52 @@
  * and open the template in the editor.
  */
 
-package com.fei0x.euchre.distributed_play;
+package com.fei0x.euchre.distributed_play.client;
 
+import com.fei0x.euchre.distributed_play.server.EuchreServer;
 import com.fei0x.euchre.exceptions.MissingPlayer;
 import com.fei0x.euchre.game.AskGame;
 import com.fei0x.euchre.game.Card;
-import com.fei0x.euchre.game.Player;
 import com.fei0x.euchre.game.Trick;
 
 import java.rmi.RemoteException;
 import java.util.List;
 
 /**
- * This class is used by the Euchre Client, the Remote Player AI uses it to ask questions about the game (following the interface as local server players) 
- * Overloads all the methods of ask game, to ask them via RMI
+ * This class is used by the Euchre Client,
+ * The Client's Player AI uses it to ask questions about the game (following the same interface as local server players) 
+ * Implements all the methods of ask game, but asks them via RMI
  * @author jsweetman
  */
-public class AskRemoteGame implements AskGame {
+public class AskGameProxy implements AskGame {
     /**
      * The server containing the game to ask.
      */
     private EuchreServer server;
 
     /**
-     * Session ID
-     */
-    private long seesionID;
-
-    /**
-     * The player who this askGame is for.
-     */
-    private Player player;
-
-    /**
-     * The player's partner
+     * The player's name
+     * (kind of like the username to the server)
      */
     private String playerName;
 
+    /**
+     * Session ID
+     * (kind of like the password to the server)
+     */
+    private long seesionID;
 
    
-
     /**
      * Create an interface to give to the player for asking questions to the game
      * @param sever the server object to connect to for answers.
-     * @param game the game to ask questions to.
-     * @param playerName the name of the player, to write in their message names.
+     * @param playerName the name of the client player, acts like a username to the server
+     * @param sessionID the sessionID of the client, acts like a password to the server
      */
-    public AskRemoteGame(EuchreServer server, long seesionID, Player player){
+    public AskGameProxy(EuchreServer server, String playerName, long seesionID){
         this.server = server;
+        this.playerName = playerName;
         this.seesionID = seesionID;
-        this.player = player;
     }
 
 
@@ -65,11 +61,11 @@ public class AskRemoteGame implements AskGame {
 		return playerName;
 	}
     
-    
-    
+        
     /***
      * The following methods are normally asked directly from the game,
      * but in this case we need to go to the connected server first, and then it can ask the game on our behalf
+     * the player name and session id are passed sort of like a username and password for fun
      */  
 
 	/**
@@ -163,7 +159,7 @@ public class AskRemoteGame implements AskGame {
     @Override
     public List<Trick> pastTricks() throws IllegalStateException{
         try {
-            return server.pastTricks(player.getName(), seesionID);
+            return server.pastTricks(playerName, seesionID);
         } catch (RemoteException ex) {
             throw new RuntimeException("Connection Failed.");
         }
@@ -177,7 +173,7 @@ public class AskRemoteGame implements AskGame {
     @Override
     public int myTeamsScore() throws MissingPlayer{
         try {
-            return server.myTeamsScore(player.getName(), seesionID);
+            return server.myTeamsScore(playerName, seesionID);
         } catch (RemoteException ex) {
             throw new RuntimeException("Connection Failed.");
         }
@@ -191,7 +187,7 @@ public class AskRemoteGame implements AskGame {
     @Override
     public int opponentsScore(){
         try {
-            return server.opponentsScore(player.getName(), seesionID);
+            return server.opponentsScore(playerName, seesionID);
         } catch (RemoteException ex) {
             throw new RuntimeException("Connection Failed.");
         }
@@ -205,7 +201,7 @@ public class AskRemoteGame implements AskGame {
     @Override
     public String whoIsDealer(){
         try {
-            return server.whoIsDealer(player.getName(), seesionID);
+            return server.whoIsDealer(playerName, seesionID);
         } catch (RemoteException ex) {
             throw new RuntimeException("Connection Failed.");
         }
@@ -219,7 +215,7 @@ public class AskRemoteGame implements AskGame {
     @Override
     public String whoIsLeadPlayer(){
         try {
-            return server.whoIsLeadPlayer(player.getName(), seesionID);
+            return server.whoIsLeadPlayer(playerName, seesionID);
         } catch (RemoteException ex) {
             throw new RuntimeException("Connection Failed.");
         }

@@ -5,6 +5,7 @@
 
 package com.fei0x.euchre.game;
 
+import java.io.PrintStream;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,6 +19,11 @@ import com.fei0x.euchre.exceptions.MissingPlayer;
  */
 public class AskGameImpl implements AskGame {
 
+    /**
+     * The output stream that players can talk to each other via.
+     */
+    private PrintStream messenger;
+    
     /**
      * The game in progress for the player to make inquiries to.
      */
@@ -33,13 +39,11 @@ public class AskGameImpl implements AskGame {
      */
     private Player partner;
 
-
     /**
      * The player's team.
      */
     private Team myTeam;
     
-
     /**
      * The opponents's team.
      */
@@ -50,7 +54,7 @@ public class AskGameImpl implements AskGame {
      * @param game the game to ask questions to.
      * @param player the player, who will ask questions, used to create the context for answering the questions.
      */
-    public AskGameImpl(EuchreGame game, Player player){
+    protected AskGameImpl(EuchreGame game, Player player, PrintStream ps){
         this.game = game;
         this.player = player;
         this.myTeam = game.getTeams().stream().filter(t -> t.getPlayers().contains(player)).findFirst().get();
@@ -74,19 +78,19 @@ public class AskGameImpl implements AskGame {
 	}
 
 	/**
-	 * returns a copy of the cards in this players hand
-     * @return a copy of the cards in this players hand
-	 */
-	public List<Card> myHand() {
-		return player.getHand().clone().cards();
-	}
-
-	/**
 	 * returns the name of this players' partner
      * @return the name of this players' partner
 	 */
 	public String partnersName() {
 		return partner.getName();
+	}
+
+	/**
+	 * returns a copy of the cards in this players hand
+     * @return a copy of the cards in this players hand
+	 */
+	public List<Card> myHand() {
+		return player.getHand().clone().getCards();
 	}
     
     /**
@@ -94,16 +98,8 @@ public class AskGameImpl implements AskGame {
      * @param somethingToSay something to write to the log/all other players
      */
     public void speak(String somethingToSay){
-        game.playerSpeaks(player.getName(), somethingToSay);
+    	messenger.println(player.getName() + " says: " + somethingToSay);
     }
-
-    /**
-     * returns all of the past tricks in the round. This lets the player know who played every card and all cards played this round. (this tricks are cloned so the ai player wont be able to manipulate the game.
-     * @return a ist of all the completed tricks this round. In order in which it was played.
-     * @throws IllegalStateException if this is called outside the scope of a round. (but all player functions should be within the round)
-     */
-    public List<Trick> pastTricks() throws IllegalStateException{
-        return game.getCurrentRound().getTricks().stream().map(t -> t.clone()).collect(Collectors.toList());    }
 
     /**
      * Returns your team's name
@@ -165,10 +161,16 @@ public class AskGameImpl implements AskGame {
      * @return the player who will play/has played first this round. If going alone has not yet been decided, it will be the player after the dealer.
      */
     public String whoIsLeadPlayer(){
-        return game.getCurrentRound().getLeadPlayer().getName();
+        return game.getCurrentRound().leadPlayer().getName();
     }
 
-
-
-
+    /**
+     * returns all of the past tricks in the round. This lets the player know who played every card and all cards played this round. (this tricks are cloned so the ai player wont be able to manipulate the game.
+     * @return a list of all the completed tricks this round. In order in which it was played.
+     * @throws IllegalStateException if this is called outside the scope of a round. (but all player functions should be within the round)
+     */
+    public List<Trick> pastTricks() {
+        return game.getCurrentRound().getTricks().stream().map(t -> t.clone()).collect(Collectors.toList());    
+    }
+ 
 }

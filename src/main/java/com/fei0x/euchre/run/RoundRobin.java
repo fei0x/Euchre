@@ -32,7 +32,7 @@ public class RoundRobin {
     /**
      * Whether or not to write out detailed game output during the round robin.
      */
-    private int verbose = 0;
+    private boolean verbose;
 
     /**
      * The number of games each team (combo of two players) will play together against each other team.
@@ -45,11 +45,11 @@ public class RoundRobin {
      * Construct a round robin
      * @param players the players to participate in the round robin (you can have more than 4, but not less)
      * @param numOfGamesPerArragnement number of games to play with each combination of 4 players
-     * @param verbose the verbose level either 0 - very little, 1 - basics, 2 - full
+     * @param verbose the verbose level either false - basics, true - full
      * @param output the stream to print the results to
      * @throws IllegalArgumentException if there are any issues with the inputs
      */
-    public RoundRobin(List<Player> players, int numOfGamesPerArragnement, int verbose, PrintStream output) throws IllegalArgumentException{
+    public RoundRobin(List<Player> players, int numOfGamesPerArragnement, boolean verbose, PrintStream output) throws IllegalArgumentException{
         if(players.size() < 4){
             throw new IllegalArgumentException("There must be at minimum four players to play a round robin.");
         }
@@ -84,6 +84,7 @@ public class RoundRobin {
         //Iterate through all player combinations:
         //first find team1 players a and b
         //then find team2 players c and d
+        // a, b, c, & d represent the indexes of the players
         for(int a = 0; a < playerStats.size(); a++){
             for(int b = a+1; b < playerStats.size(); b++){
                 playera = playerStats.get(a);
@@ -94,7 +95,7 @@ public class RoundRobin {
                     if(c != a && c != b){  //makes sure they don't play against themselves...
                         for(int d = c+1; d < playerStats.size(); d++){
                             if(d != a && d != b){  //makes sure they don't play against themselves... again...
-                                if(!(a < c || b < c)){//make sure they dont play a team they've already played.
+                                if(a > c && b > c){//make sure they don't play a team they've already played.
                                 	
                                     playerc = playerStats.get(c);
                                     playerd = playerStats.get(d);
@@ -124,20 +125,22 @@ public class RoundRobin {
         //all games have been played, print results.
         //sort the players by wins.
         Collections.sort(playerStats);
+        Collections.reverse(playerStats);
 
-        int position = 1;
+        int currPosition = 1;
         
         //print out first place separately, need to compare in the loop to show ties.
         PlayerStats winner = playerStats.get(0);
-        out.println(position + ")  " + winner.statString());
+        out.println(currPosition + ")  " + winner.statString());
         
         for(int i = 1; i < playerStats.size(); i++){
             PlayerStats player = playerStats.get(i);
             if(player.wins < playerStats.get(i-1).wins){
-                position++;
+            	currPosition = i+1;
             }
-            out.println(position + ")  " + player.statString());
+            out.println(currPosition + ")  " + player.statString());
         }
+        out.println("");
 
     }
 
@@ -190,7 +193,7 @@ public class RoundRobin {
         /**
          * Compare function so that the player stats can be sorted by wins.
          * @param the object to compare it to... if it's notPlayerStats will return 0
-         * @return 1 if this player has less wins. -1 if it has more, (cause -1 means you come first and we want decending order) 0 if it's the same or the object is not a playerStats
+         * @return 1 if this player has less wins. -1 if it has more, (cause -1 means you come first and we want descending order) 0 if it's the same or the object is not a playerStats
          */
         @Override
         public int compareTo(PlayerStats arg0) {

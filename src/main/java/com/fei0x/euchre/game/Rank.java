@@ -34,7 +34,7 @@ public enum Rank implements Serializable {
      * @param name   name of the card
      * @param value  the value of this card (not counting trump scenarios)
      */
-    Rank(String name, int value){
+    private Rank(String name, int value){
         this.name = name;
         this.value = value;
     }

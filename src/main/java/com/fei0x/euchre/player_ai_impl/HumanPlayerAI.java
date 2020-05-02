@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package com.fei0x.euchre.player_ai;
+package com.fei0x.euchre.player_ai_impl;
 
 import java.util.List;
 import java.io.BufferedReader;
@@ -14,6 +14,7 @@ import java.io.PrintStream;
 
 import com.fei0x.euchre.game.Card;
 import com.fei0x.euchre.game.Play;
+import com.fei0x.euchre.game.PlayerAI;
 import com.fei0x.euchre.game.Suit;
 import com.fei0x.euchre.game.Trick;
 
@@ -55,7 +56,7 @@ public class HumanPlayerAI extends PlayerAI {
         
         //show player the face-up card
         out.println("| Face-Up Card is:");
-        out.println("|   " + faceUpCard.getName());
+        out.println("|   " + faceUpCard.name());
         
         //get a decision from the player
         String response;
@@ -85,7 +86,7 @@ public class HumanPlayerAI extends PlayerAI {
     @Override
     public Card swapWithFaceUpCard(Card faceUpCard) {
         out.println("| You have been called up, the face-up card is:");
-        out.println("|   " + faceUpCard.getName());
+        out.println("|   " + faceUpCard.name());
 
         out.println("| Select a card to swap with the kitty:");
         printMyCards();
@@ -115,7 +116,7 @@ public class HumanPlayerAI extends PlayerAI {
     @Override
     public Suit callSuit(Card turnedDownCard) {
         out.println("| The top-card of the kitty was turned down, it was:");
-        out.println("|   " + turnedDownCard.getName());
+        out.println("|   " + turnedDownCard.name());
 
         out.println("| Your hand is:");
         printMyCards();
@@ -159,7 +160,7 @@ public class HumanPlayerAI extends PlayerAI {
     @Override
     public Suit stickTheDealer(Card turnedDownCard) {
         out.println("| The top-card of the kitty was turned down, it was:");
-        out.println("|   " + turnedDownCard.getName());
+        out.println("|   " + turnedDownCard.name());
 
         out.println("| Your hand is:");
         printMyCards();
@@ -227,7 +228,7 @@ public class HumanPlayerAI extends PlayerAI {
     	//show cards played so far
         out.println("| Your turn to play, The trick so far:");
         List<Play> plays = currentTrick.getPlays();
-        plays.stream().forEach(p -> out.println("|   " + p.getCard().getName() + "  - " + p.getPlayer()));
+        plays.stream().forEach(p -> out.println("|   " + p.getCard().name() + "  - " + p.getPlayer()));
 
         //show my cards
         out.println("| Select a card to play (trump is " + currentTrick.getTrump().getName() + ") :");
@@ -262,7 +263,7 @@ public class HumanPlayerAI extends PlayerAI {
     private void printMyCards(){
         List<Card> cards = askGame.myHand();
         for(int i=0; i < cards.size(); i++){
-            out.println("|   (" + (i+1) + ") " + cards.get(i).getName());
+            out.println("|   (" + (i+1) + ") " + cards.get(i).name());
         }
     }
     

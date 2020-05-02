@@ -3,12 +3,15 @@
  * and open the template in the editor.
  */
 
-package com.fei0x.euchre.distributed_play;
+package com.fei0x.euchre.distributed_play.server;
 
+import com.fei0x.euchre.distributed_play.client.EuchreClient;
 import com.fei0x.euchre.exceptions.MissingPlayer;
 import com.fei0x.euchre.game.Trick;
+import com.fei0x.euchre.game.AskGame;
 import com.fei0x.euchre.game.Card;
 import com.fei0x.euchre.game.Player;
+import com.fei0x.euchre.game.PlayerAI;
 
 import java.io.PrintStream;
 import java.net.InetAddress;
@@ -21,6 +24,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 /**
   * This class is instantiated by a Euchre Server to connect and communicate to the Euchre Client
@@ -83,15 +87,16 @@ public class EuchreServerImpl extends UnicastRemoteObject implements EuchreServe
 
      
     /**
-     * Start up a server, add a bunch of local players to start.
-     * @param players
+     * Create the server to receive join requests from clients, manage connections and bidirectional communications
+     * @param serverPort the port to host this game on
+     * @param localout a place to print server messages & logs
      */
-    public EuchreServerImpl(List<Player> players, int serverPort, PrintStream localout) throws RemoteException, UnknownHostException, IllegalArgumentException{
+    public EuchreServerImpl(int serverPort, PrintStream localout) throws RemoteException, UnknownHostException, IllegalArgumentException{
         this.localout = localout;
         this.serverPort = serverPort;
         InetAddress addr = InetAddress.getLocalHost();
         serverAddr = addr.getCanonicalHostName();
-        localout.println("Provide this address '" + serverAddr + "' and port '" + serverPort + "' to clients to connect with.");
+        localout.println("Provide this address '" + serverAddr + "' and port '" + serverPort + "' to clients, so they can connect.");
         try{
             registry = LocateRegistry.createRegistry(serverPort);
             registry.rebind("EuchreServer", this);
@@ -103,18 +108,21 @@ public class EuchreServerImpl extends UnicastRemoteObject implements EuchreServe
     /**
      * Register a remote player to the game. while the game is running
      * The client calls this method remotely
+     * We make this synchronized to make sure we don't add two players with the same name or session id at the same time.
      * @param newPlayerName the name of the player
      * @param hostAddress the address of this player's
      * @return a session id for the player, 0 if the player was not accepted into the game. -1 if they're not allowed in because of a duplicate name
      */
     @Override
-    public long joinServer(String newPlayerName, String clientAddress, int clientPort) throws RemoteException{
+    public synchronized long joinServer(String newPlayerName, String clientAddress, int clientPort) throws RemoteException{
         localout.println("Recieving Incoming player Request: Player '" + newPlayerName + "' at host '" + clientAddress +"' and port '" + clientPort);
-        long sessionID = 0;//return a zero if the new player is not allowed to connect.
-        if(acceptingNewPlayers){//check to see if new player's are allowed to connect.
+        long sessionID = 0; //return a zero if the new player is not allowed to connect.
+        
+        if(acceptingNewPlayers){ //check to see if new player's are allowed to connect.
 
-            //create a session ID
-            while(sessionID == 0 || sessionID == -1){
+            //create a sessionID (would use UUID but currently simplifying the return using 0 and -1 responses)
+        	//make sure sessionID not already used by another player
+            while(sessionID == 0 || sessionID == -1  || playerSessions.stream().map(ps -> ps.sessionID).collect(Collectors.toSet()).contains(sessionID)){
                 sessionID = rnd.nextLong()*100000;
             }
 
@@ -158,6 +166,17 @@ public class EuchreServerImpl extends UnicastRemoteObject implements EuchreServe
         return sessionID;
     }
 
+    /**
+     * used by the client to make sure the connection is still connected.
+     * this doesn't do anything, but RMI knows not to drop the connection if calls are being made.
+     * @throws RemoteException when the connection has been dropped
+     */
+    public void keepAlive() throws RemoteException {
+        //Keepin' it (client) alive
+    }
+    
+    
+    
 
     /**
      * Send a message to a specific remote player
@@ -174,20 +193,13 @@ public class EuchreServerImpl extends UnicastRemoteObject implements EuchreServe
 
     /**
      * Broadcasts a message to all players
-     * @param message
+     * @param message the message to broadcast to all the remove players
      */
     public void sendMessageToAll(String message){
         //send out the message to each remote player
     	playerSessions.stream().forEach(ps -> sendMessage(ps, message));
     }
 
-    /**
-     * used by the client to make sure the connection is still connected.
-     * @throws RemoteException
-     */
-    public void keepAlive() throws RemoteException {
-        //Keepin' it (client) alive
-    }
 
     /**
      * Disconnect a specific remote player
@@ -236,9 +248,35 @@ public class EuchreServerImpl extends UnicastRemoteObject implements EuchreServe
         
     }
 
+
+    
+    /**
+     * This class extends the Player class,
+     * This player is different from a regular player in that it represents a player that is a client playing the game remotely
+     * We need to expose the AskGame class that the EuchreGame assigns so that we can refer to it to answer the questions from the remote player 
+     */
+    private class RemotePlayer extends Player{
+    	
+    	/**
+    	 * Auto-Generated Super Constructor
+    	 */
+    	public RemotePlayer(String name, PlayerAI ai) {
+    		super(name, ai);
+    	}
+
+        /**
+         * This may seem silly, but this is basically allowing AskGame to be retrievable from RemotePlayers ONLY, ONLY in this package
+         */
+    	@Override
+    	protected AskGame getAskGame(){
+            return super.getAskGame();
+        }
+
+    }
+    
     /**
      * Private inner class holding all the remote player sessions
-     * which in turn holds the 'pointers' to the remote players
+     * which in turn holds the 'pointers' to the players (which are using proxy ai)
      */
     private class PlayerSession{
 
@@ -269,7 +307,7 @@ public class EuchreServerImpl extends UnicastRemoteObject implements EuchreServe
          * this class hosts a shim AI for the real implementation which is on the EuchreClient class (which is instantiated by the client)
          * we get the 'AskRemoteGame' class hosted in this object to ask the player ai what they want to do. (which is slightly different than normal)
          */
-        public Player remotePlayer;
+        public RemotePlayer remotePlayer;
 
         /**
          * Create a remote player session
@@ -284,7 +322,7 @@ public class EuchreServerImpl extends UnicastRemoteObject implements EuchreServe
             this.hostAddr = hostAddr;
             this.port = port;
             this.sessionID = sessionID;
-            this.remotePlayer = new Player( playerName, new RemotePlayerAI(client));
+            this.remotePlayer = new RemotePlayer( playerName, new PlayerAIProxy(client));
         }
     }
 
@@ -317,7 +355,7 @@ public class EuchreServerImpl extends UnicastRemoteObject implements EuchreServe
     public List<Card> myHand(String playerName, long sessionID) throws RemoteException {
         try{
             PlayerSession ps = getRemotePlayerSession(playerName, sessionID);
-            return ((RemotePlayerAI)(ps.remotePlayer.getAi())).getAskGame().myHand();
+            return ps.remotePlayer.getAskGame().myHand();
         }catch(MissingPlayer mp){
             throw new RemoteException("Server could not locate player:" + playerName + " with Session:" + sessionID);
         }
@@ -327,7 +365,7 @@ public class EuchreServerImpl extends UnicastRemoteObject implements EuchreServe
     public String partnersName(String playerName, long sessionID) throws RemoteException {
         try{
             PlayerSession ps = getRemotePlayerSession(playerName, sessionID);
-            return ((RemotePlayerAI)(ps.remotePlayer.getAi())).getAskGame().partnersName();
+            return ps.remotePlayer.getAskGame().partnersName();
         }catch(MissingPlayer mp){
             throw new RemoteException("Server could not locate player:" + playerName + " with Session:" + sessionID);
         }
@@ -337,7 +375,7 @@ public class EuchreServerImpl extends UnicastRemoteObject implements EuchreServe
     public String myTeamName(String playerName, long sessionID) throws RemoteException {
         try{
             PlayerSession ps = getRemotePlayerSession(playerName, sessionID);
-            return ((RemotePlayerAI)(ps.remotePlayer.getAi())).getAskGame().myTeamName();
+            return ps.remotePlayer.getAskGame().myTeamName();
         }catch(MissingPlayer mp){
             throw new RemoteException("Server could not locate player:" + playerName + " with Session:" + sessionID);
         }
@@ -347,7 +385,7 @@ public class EuchreServerImpl extends UnicastRemoteObject implements EuchreServe
     public String opponentsTeamName(String playerName, long sessionID) throws RemoteException {
         try{
             PlayerSession ps = getRemotePlayerSession(playerName, sessionID);
-            return ((RemotePlayerAI)(ps.remotePlayer.getAi())).getAskGame().opponentsTeamName();
+            return ps.remotePlayer.getAskGame().opponentsTeamName();
         }catch(MissingPlayer mp){
             throw new RemoteException("Server could not locate player:" + playerName + " with Session:" + sessionID);
         }
@@ -357,7 +395,7 @@ public class EuchreServerImpl extends UnicastRemoteObject implements EuchreServe
     public List<String> opponentsNames(String playerName, long sessionID) throws RemoteException {
         try{
             PlayerSession ps = getRemotePlayerSession(playerName, sessionID);
-            return ((RemotePlayerAI)(ps.remotePlayer.getAi())).getAskGame().opponentsNames();
+            return ps.remotePlayer.getAskGame().opponentsNames();
         }catch(MissingPlayer mp){
             throw new RemoteException("Server could not locate player:" + playerName + " with Session:" + sessionID);
         }
@@ -367,7 +405,7 @@ public class EuchreServerImpl extends UnicastRemoteObject implements EuchreServe
     public void speak(String playerName, long sessionID, String somethingToSay) throws RemoteException {
         try{
             PlayerSession ps = getRemotePlayerSession(playerName, sessionID);
-            ((RemotePlayerAI)(ps.remotePlayer.getAi())).getAskGame().speak(somethingToSay);
+            ps.remotePlayer.getAskGame().speak(somethingToSay);
         }catch(MissingPlayer mp){
             throw new RemoteException("Server could not locate player:" + playerName + " with Session:" + sessionID);
         }
@@ -377,7 +415,7 @@ public class EuchreServerImpl extends UnicastRemoteObject implements EuchreServe
     public List<Trick> pastTricks(String playerName, long sessionID) throws RemoteException, IllegalStateException {
         try{
         	PlayerSession ps = getRemotePlayerSession(playerName, sessionID);
-            return ((RemotePlayerAI)(ps.remotePlayer.getAi())).getAskGame().pastTricks();
+            return ps.remotePlayer.getAskGame().pastTricks();
         }catch(MissingPlayer mp){
             throw new RemoteException("Server could not locate player:" + playerName + " with Session:" + sessionID);
         }
@@ -387,7 +425,7 @@ public class EuchreServerImpl extends UnicastRemoteObject implements EuchreServe
     public int myTeamsScore(String playerName, long sessionID) throws RemoteException, MissingPlayer {
         try{
         	PlayerSession ps = getRemotePlayerSession(playerName, sessionID);
-        	return ((RemotePlayerAI)(ps.remotePlayer.getAi())).getAskGame().myTeamsScore();
+        	return ps.remotePlayer.getAskGame().myTeamsScore();
         }catch(MissingPlayer mp){
             throw new RemoteException("Server could not locate player:" + playerName + " with Session:" + sessionID);
         }
@@ -397,7 +435,7 @@ public class EuchreServerImpl extends UnicastRemoteObject implements EuchreServe
     public int opponentsScore(String playerName, long sessionID) throws RemoteException {
         try{
         	PlayerSession ps = getRemotePlayerSession(playerName, sessionID);
-        	return ((RemotePlayerAI)(ps.remotePlayer.getAi())).getAskGame().opponentsScore();
+        	return ps.remotePlayer.getAskGame().opponentsScore();
         }catch(MissingPlayer mp){
             throw new RemoteException("Server could not locate player:" + playerName + " with Session:" + sessionID);
         }
@@ -407,7 +445,7 @@ public class EuchreServerImpl extends UnicastRemoteObject implements EuchreServe
     public String whoIsDealer(String playerName, long sessionID) throws RemoteException {
         try{
         	PlayerSession ps = getRemotePlayerSession(playerName, sessionID);
-        	return ((RemotePlayerAI)(ps.remotePlayer.getAi())).getAskGame().whoIsDealer();
+        	return ps.remotePlayer.getAskGame().whoIsDealer();
         }catch(MissingPlayer mp){
             throw new RemoteException("Server could not locate player:" + playerName + " with Session:" + sessionID);
         }
@@ -417,7 +455,7 @@ public class EuchreServerImpl extends UnicastRemoteObject implements EuchreServe
     public String whoIsLeadPlayer(String playerName, long sessionID) throws RemoteException {
         try{
         	PlayerSession ps = getRemotePlayerSession(playerName, sessionID);
-        	return ((RemotePlayerAI)(ps.remotePlayer.getAi())).getAskGame().whoIsLeadPlayer();
+        	return ps.remotePlayer.getAskGame().whoIsLeadPlayer();
         }catch(MissingPlayer mp){
             throw new RemoteException("Server could not locate player:" + playerName + " with Session:" + sessionID);
         }

@@ -3,13 +3,15 @@
  * and open the template in the editor.
  */
 
-package com.fei0x.euchre.distributed_play;
+package com.fei0x.euchre.distributed_play.server;
 
 import java.io.PrintStream;
 
 /**
- * A PrintStream that can relay messages to Server Clients.
- * Passes all the print and println messages to the respective server clients
+ * A PrintStream that can relay messages from the Server to Euchre Clients.
+ * Passes all the print and println messages to the respective clients
+ * 
+ * Only makes calls to send messages when println is called, regular prints are just held until the entire line is ready.
  * @author jsweetman
  */
 public class ServerPrintStream extends PrintStream{
@@ -27,7 +29,7 @@ public class ServerPrintStream extends PrintStream{
 
     /**
      * Create a printstream that can relay messages to remote clients, but can still send messages locally.
-     * @param localPrintStream the printstream to extend. it'll deal wiht local prints.
+     * @param localPrintStream the printstream to extend. it'll deal with local prints.
      */
     public ServerPrintStream(EuchreServerImpl server, PrintStream localPrintStream){
         super(localPrintStream);
@@ -99,6 +101,7 @@ public class ServerPrintStream extends PrintStream{
     @Override
     public void println(boolean b){
         stringToWrite += String.valueOf(b);
+        println();
         server.sendMessageToAll(stringToWrite);
         super.println(b);
         stringToWrite = "";

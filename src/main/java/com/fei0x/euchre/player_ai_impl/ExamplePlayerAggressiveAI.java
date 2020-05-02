@@ -3,13 +3,14 @@
  * and open the template in the editor.
  */
 
-package com.fei0x.euchre.player_ai;
+package com.fei0x.euchre.player_ai_impl;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
 import com.fei0x.euchre.game.Card;
+import com.fei0x.euchre.game.PlayerAI;
 import com.fei0x.euchre.game.Suit;
 import com.fei0x.euchre.game.Trick;
 
@@ -96,13 +97,13 @@ public class ExamplePlayerAggressiveAI extends PlayerAI {
         List<Card> cards;
         //first see if you are the lead player this trick
         
-        if(currentTrick.isTrickEmpty()){
+        if(currentTrick.trickEmpty()){
             //you are the trick leader all cards are valid.
             cards = askGame.myHand();
         
         }else{
             //you are not the trick leader, find all the legal plays in your hand. (to follow suit)
-            cards = Card.findLegalCards(askGame.myHand(), currentTrick.getLedCard(), currentTrick.getTrump() );           
+            cards = Card.findLegalCards(askGame.myHand(), currentTrick.ledCard(), currentTrick.getTrump() );           
         }
         
         //Note: the current trick can tell you who the current leader is, what card led, the suit that led, who played each card and the order the cards where played in.
